@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hidden History</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <span class="logo">H.</span>
+      <span class="brand">HIDDEN HISTORY</span>
+    </header>
+
+    <section id="home-screen">
+      <p class="eyebrow">EXPLORE YOUR SURROUNDINGS</p>
+      <h1>There's more<br>to your city.</h1>
+      <p class="intro">
+        Find somewhere unexpected. Discover the story behind it.
+      </p>
+
+      <div class="mode-picker">
+        <p class="label">HOW WILL YOU TRAVEL?</p>
+        <div class="mode-toggle">
+          <button class="mode-option selected" data-mode="walking">Walking</button>
+          <button class="mode-option" data-mode="cycling">Cycling</button>
+        </div>
+      </div>
+
+      <div class="walk-options">
+        <p class="label">HOW MUCH TIME HAVE YOU GOT?</p>
+        <button class="time-option" data-minutes="15">15 minutes</button>
+        <button class="time-option selected" data-minutes="30">30 minutes</button>
+        <button class="time-option" data-minutes="60">1 hour</button>
+        <button class="time-option" data-minutes="90">60+ minutes</button>
+      </div>
+
+      <button id="discover-button" class="primary">
+        Find my discovery →
+      </button>
+      <p class="note">A different route starts here.</p>
+
+      <div class="history-map">
+        <p class="label">YOUR DISCOVERY MAP</p>
+        <ul id="discovery-list" class="discovery-list">
+          <li class="empty-state">No discoveries yet. Your first hidden story is waiting.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="result-screen" hidden>
+      <button id="back-button" class="back">← Back</button>
+      <p class="eyebrow">YOUR NEXT DISCOVERY</p>
+
+      <div class="route-map" aria-label="Mystery route map">
+        <div class="route-line route-line-one"></div>
+        <div class="route-line route-line-two"></div>
+        <div class="user-marker"></div>
+        <div class="destination-marker"></div>
+      </div>
+
+      <div class="mystery-card">
+        <span class="eyebrow subtle">HIDDEN LOCATION</span>
+        <h2 id="mystery-destination">Mystery destination</h2>
+        <p id="destination-hint">Follow the route and see what the city reveals.</p>
+      </div>
+
+      <div class="details">
+        <span id="walk-time"></span>
+        <span id="walk-distance"></span>
+      </div>
+
+      <div class="action-stack">
+        <button id="simulate-arrival" class="secondary">
+          Simulate arrival
+        </button>
+        <button id="story-button" class="primary locked" disabled>
+          Story locked until arrival
+        </button>
+      </div>
+    </section>
+
+    <section id="story-screen" hidden>
+      <button id="story-back" class="back">← Back</button>
+      <p class="eyebrow">THE STORY BEHIND THE PLACE</p>
+      <h1 id="story-title"></h1>
+      <p id="story-text" class="intro"></p>
+
+      <div class="story-actions">
+        <button id="mark-discovered-button" class="secondary">
+          Mark as discovered
+        </button>
+        <button id="restart-button" class="primary">
+          Find another place ↗
+        </button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
