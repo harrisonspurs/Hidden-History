@@ -1,102 +1,66 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hidden History</title>
+
+  <!-- Leaflet map library -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <link rel="stylesheet" href="style.css">
+  <script src="places.js" defer></script>
   <script src="script.js" defer></script>
 </head>
 <body>
   <main class="app">
-    <header>
-      <span class="logo">H.</span>
-      <span class="brand">HIDDEN HISTORY</span>
-    </header>
+    <h1 class="title">Hidden History</h1>
 
+    <!-- Screen 1: choose how long -->
     <section id="home-screen">
-      <p class="eyebrow">EXPLORE YOUR SURROUNDINGS</p>
-      <h1>There's more<br>to your city.</h1>
-      <p class="intro">
-        Find somewhere unexpected. Discover the story behind it.
-      </p>
+      <p>Pick how long you've got and we'll send you somewhere with a story.</p>
 
-      <div class="mode-picker">
-        <p class="label">HOW WILL YOU TRAVEL?</p>
-        <div class="mode-toggle">
-          <button class="mode-option selected" data-mode="walking">Walking</button>
-          <button class="mode-option" data-mode="cycling">Cycling</button>
-        </div>
+      <p class="label">Walking or cycling?</p>
+      <div class="options">
+        <button class="mode-option selected" data-mode="walking">Walking</button>
+        <button class="mode-option" data-mode="cycling">Cycling</button>
       </div>
 
-      <div class="walk-options">
-        <p class="label">HOW MUCH TIME HAVE YOU GOT?</p>
-        <button class="time-option" data-minutes="15">15 minutes</button>
-        <button class="time-option selected" data-minutes="30">30 minutes</button>
+      <p class="label">How long have you got?</p>
+      <div class="options">
+        <button class="time-option" data-minutes="15">15 mins</button>
+        <button class="time-option selected" data-minutes="30">30 mins</button>
         <button class="time-option" data-minutes="60">1 hour</button>
-        <button class="time-option" data-minutes="90">60+ minutes</button>
       </div>
 
-      <button id="discover-button" class="primary">
-        Find my discovery →
-      </button>
-      <p class="note">A different route starts here.</p>
+      <button id="go-button" class="main-button">Find somewhere</button>
+      <p id="status" class="small"></p>
 
-      <div class="history-map">
-        <p class="label">YOUR DISCOVERY MAP</p>
-        <ul id="discovery-list" class="discovery-list">
-          <li class="empty-state">No discoveries yet. Your first hidden story is waiting.</li>
-        </ul>
-      </div>
+      <h2>Places you've found</h2>
+      <ul id="found-list"></ul>
     </section>
 
-    <section id="result-screen" hidden>
-      <button id="back-button" class="back">← Back</button>
-      <p class="eyebrow">YOUR NEXT DISCOVERY</p>
+    <!-- Screen 2: the map -->
+    <section id="map-screen" hidden>
+      <button id="back-button" class="link-button">Back</button>
+      <h2>Something's out there...</h2>
+      <p class="small">Head to the pin. The story unlocks when you get there.</p>
 
-      <div class="route-map" aria-label="Mystery route map">
-        <div class="route-line route-line-one"></div>
-        <div class="route-line route-line-two"></div>
-        <div class="user-marker"></div>
-        <div class="destination-marker"></div>
-      </div>
+      <div id="map"></div>
 
-      <div class="mystery-card">
-        <span class="eyebrow subtle">HIDDEN LOCATION</span>
-        <h2 id="mystery-destination">Mystery destination</h2>
-        <p id="destination-hint">Follow the route and see what the city reveals.</p>
-      </div>
+      <p id="distance" class="distance"></p>
 
-      <div class="details">
-        <span id="walk-time"></span>
-        <span id="walk-distance"></span>
-      </div>
-
-      <div class="action-stack">
-        <button id="simulate-arrival" class="secondary">
-          Simulate arrival
-        </button>
-        <button id="story-button" class="primary locked" disabled>
-          Story locked until arrival
-        </button>
-      </div>
+      <a id="directions-link" class="main-button" target="_blank">Get directions</a>
+      <button id="test-arrive" class="small-button">I'm here (testing)</button>
     </section>
 
+    <!-- Screen 3: the story -->
     <section id="story-screen" hidden>
-      <button id="story-back" class="back">← Back</button>
-      <p class="eyebrow">THE STORY BEHIND THE PLACE</p>
-      <h1 id="story-title"></h1>
-      <p id="story-text" class="intro"></p>
-
-      <div class="story-actions">
-        <button id="mark-discovered-button" class="secondary">
-          Mark as discovered
-        </button>
-        <button id="restart-button" class="primary">
-          Find another place ↗
-        </button>
-      </div>
+      <p class="label">You found</p>
+      <h2 id="place-name"></h2>
+      <p id="place-story"></p>
+      <button id="again-button" class="main-button">Find another place</button>
     </section>
   </main>
 </body>
