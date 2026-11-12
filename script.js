@@ -201,8 +201,33 @@ function arrive() {
   saveFoundPlace(target.name);
 
   document.getElementById("place-name").textContent = target.name;
-  document.getElementById("place-story").textContent = target.story;
+  document.getElementById("place-story").textContent = "Loading the story...";
+  document.getElementById("place-image").hidden = true;
+  document.getElementById("place-source").href = "https://en.wikipedia.org/wiki/" + target.wiki;
   showScreen(storyScreen);
+
+  loadStory(target.wiki);
+}
+
+// Get the story from Wikipedia's free summary API (no key needed)
+async function loadStory(wikiTitle) {
+  const storyText = document.getElementById("place-story");
+  const image = document.getElementById("place-image");
+
+  try {
+    const url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(wikiTitle);
+    const response = await fetch(url);
+    const data = await response.json();
+
+    storyText.textContent = data.extract;
+
+    if (data.thumbnail) {
+      image.src = data.thumbnail.source;
+      image.hidden = false;
+    }
+  } catch (error) {
+    storyText.textContent = "Couldn't load the story right now. Tap the source link below to read it.";
+  }
 }
 
 
