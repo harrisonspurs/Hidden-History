@@ -12,6 +12,18 @@ const arriveDistance = 50;
 // If we can't get your location, pretend you're in Manchester city centre
 const defaultLocation = { lat: 53.4780, lng: -2.2430 };
 
+// Words that suggest a Wikipedia page is about somewhere historic.
+// We check these against the page's short description.
+const historicWords = [
+  "listed", "historic", "heritage", "century", "former",
+  "church", "chapel", "cathedral", "abbey",
+  "museum", "library", "gallery", "theatre",
+  "memorial", "monument", "statue", "sculpture",
+  "hall", "house", "pub", "inn",
+  "mill", "warehouse", "canal", "bridge", "viaduct",
+  "fort", "castle", "ruin", "park"
+];
+
 
 // ---------- Variables ----------
 
@@ -89,15 +101,65 @@ function showFoundList() {
 }
 
 
+// ---------- Finding places near you (live from Wikipedia) ----------
+
+function isHistoric(description) {
+  if (!description) return false;
+  const text = description.toLowerCase();
+  return historicWords.some(word => text.includes(word));
+}
+
+// Ask Wikipedia for pages with a location near you (free, no key needed)
+async function getNearbyPlaces(radius) {
+  // Wikipedia only searches up to 10km
+  radius = Math.min(Math.round(radius), 10000);
+
+  const url = "https://en.wikipedia.org/w/api.php" +
+    "?action=query&format=json&origin=*" +
+    "&generator=geosearch&ggslimit=50" +
+    "&ggscoord=" + user.lat + "|" + user.lng +
+    "&ggsradius=" + radius +
+    "&prop=coordinates|description";
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.query) return [];
+
+    const pages = Object.values(data.query.pages);
+
+    // Keep the ones that sound historic, and tidy them into the same shape as places.js
+    return pages
+      .filter(page => page.coordinates && isHistoric(page.description))
+      .map(page => {
+        return {
+          name: page.title,
+          wiki: page.title.replaceAll(" ", "_"),
+          lat: page.coordinates[0].lat,
+          lng: page.coordinates[0].lon
+        };
+      });
+  } catch (error) {
+    // If Wikipedia can't be reached, we just use our own list
+    return [];
+  }
+}
+
+
 // ---------- Picking a place ----------
 
-function pickPlace() {
-  // You need to get there AND back, so only use half the time
-  const maxDistance = speeds[mode] * minutes / 2;
+// How far you can go there and back in the time you picked
+function getMaxDistance() {
+  return speeds[mode] * minutes / 2;
+}
+
+function pickPlace(allPlaces) {
+  const maxDistance = getMaxDistance();
   const found = getFoundPlaces();
 
   // Work out how far away every place is
-  const options = places.map(place => {
+  const options = allPlaces.map(place => {
     return {
       ...place,
       distance: getDistance(user.lat, user.lng, place.lat, place.lng)
@@ -233,8 +295,22 @@ async function loadStory(wikiTitle) {
 
 // ---------- Starting a trip ----------
 
-function startTrip() {
-  target = pickPlace();
+async function startTrip() {
+  statusText.textContent = "Looking for places near you...";
+
+  // Our hand-picked places + whatever Wikipedia finds nearby
+  const nearby = await getNearbyPlaces(getMaxDistance());
+  const allPlaces = [...places];
+
+  for (const place of nearby) {
+    // Don't add it twice if it's already in our list
+    if (!allPlaces.some(p => p.wiki === place.wiki)) {
+      allPlaces.push(place);
+    }
+  }
+
+  target = pickPlace(allPlaces);
+  statusText.textContent = "";
   showMap();
 }
 
