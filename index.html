@@ -4,68 +4,135 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hidden History</title>
+  <meta name="description" content="Pick how long you've got and get sent to somewhere nearby with a past.">
 
-  <!-- Leaflet map library -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Lets people add the site to their phone's home screen -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1b4a9a">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+
+  <!-- Leaflet map library (kept in the project so it works without a CDN) -->
+  <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+  <script src="lib/leaflet/leaflet.js" defer></script>
 
   <link rel="stylesheet" href="style.css">
   <script src="places.js" defer></script>
+  <script src="finder.js" defer></script>
   <script src="script.js" defer></script>
 </head>
 <body>
   <main class="app">
-    <h1 class="title">Hidden History</h1>
 
-    <!-- Screen 1: choose how long -->
+    <!-- Screen 1: home -->
     <section id="home-screen">
-      <p>Pick how long you've got and we'll send you somewhere with a story.</p>
-
-      <p class="label">Walking or cycling?</p>
-      <div class="options">
-        <button class="mode-option selected" data-mode="walking">Walking</button>
-        <button class="mode-option" data-mode="cycling">Cycling</button>
+      <div class="plaque plaque-big">
+        <p>Find the</p>
+        <h1>Hidden History</h1>
+        <p>on your doorstep</p>
       </div>
 
-      <p class="label">How long have you got?</p>
-      <div class="options">
-        <button class="time-option" data-minutes="15">15 mins</button>
-        <button class="time-option selected" data-minutes="30">30 mins</button>
-        <button class="time-option" data-minutes="60">1 hour</button>
+      <p class="intro">
+        Say how long you've got. You'll be sent to somewhere nearby with a past,
+        and you only find out what it is when you get there.
+      </p>
+
+      <fieldset id="mode-choices" class="choices">
+        <legend>How are you travelling?</legend>
+        <button type="button" data-value="walking" aria-pressed="true">On foot</button>
+        <button type="button" data-value="cycling" aria-pressed="false">By bike</button>
+      </fieldset>
+
+      <fieldset id="time-choices" class="choices">
+        <legend>How long have you got, there and back?</legend>
+        <button type="button" data-value="15" aria-pressed="false">15 minutes</button>
+        <button type="button" data-value="30" aria-pressed="true">30 minutes</button>
+        <button type="button" data-value="60" aria-pressed="false">1 hour</button>
+      </fieldset>
+
+      <fieldset id="theme-choices" class="choices choices-wrap">
+        <legend>What sort of place?</legend>
+        <button type="button" data-value="anything" aria-pressed="true">Anything</button>
+        <button type="button" data-value="churches" aria-pressed="false">Churches</button>
+        <button type="button" data-value="pubs" aria-pressed="false">Pubs</button>
+        <button type="button" data-value="industry" aria-pressed="false">Industry</button>
+        <button type="button" data-value="memorials" aria-pressed="false">Memorials</button>
+        <button type="button" data-value="houses" aria-pressed="false">Halls and houses</button>
+      </fieldset>
+
+      <button id="go-button" class="sign-button" type="button">Send me somewhere</button>
+
+      <!-- Messages and problems show up here -->
+      <div id="status" class="status" role="status" hidden>
+        <p id="status-text"></p>
+        <button id="demo-button" class="text-button" type="button" hidden>
+          Start from Manchester city centre instead
+        </button>
       </div>
 
-      <button id="go-button" class="main-button">Find somewhere</button>
-      <p id="status" class="small"></p>
-
-      <h2>Places you've found</h2>
-      <ul id="found-list"></ul>
+      <p class="finds-summary">
+        <span id="finds-summary-text"></span>
+        <button id="finds-button" class="text-button" type="button">See your finds</button>
+      </p>
     </section>
 
-    <!-- Screen 2: the map -->
-    <section id="map-screen" hidden>
-      <button id="back-button" class="link-button">Back</button>
-      <h2>Something's out there...</h2>
-      <p class="small">Head to the pin. The story unlocks when you get there.</p>
 
-      <div id="map"></div>
+    <!-- Screen 2: on the way -->
+    <section id="hunt-screen" hidden>
+      <button id="back-button" class="text-button" type="button">Back</button>
 
-      <p id="distance" class="distance"></p>
+      <h2 id="distance" class="distance"></h2>
+      <p>Head for the question mark. You'll find out what it is when you're within 50 metres.</p>
+      <p id="clue" class="clue" hidden></p>
 
-      <a id="directions-link" class="main-button" target="_blank">Get directions</a>
-      <button id="test-arrive" class="small-button">I'm here (testing)</button>
+      <div id="map" class="map"></div>
+      <p id="hunt-note" class="note" hidden></p>
+
+      <a id="directions-link" class="sign-button" target="_blank" rel="noopener">Open directions</a>
+      <button id="skip-button" class="plain-button" type="button">Pick a different place</button>
+      <button id="test-arrive" class="text-button test-button" type="button">I'm here (for testing)</button>
     </section>
+
 
     <!-- Screen 3: the story -->
     <section id="story-screen" hidden>
-      <p class="label">You found</p>
-      <h2 id="place-name"></h2>
-      <img id="place-image" hidden>
-      <p id="place-story"></p>
-      <p class="small">
-        Source: <a id="place-source" target="_blank">Wikipedia</a>
-      </p>
-      <button id="again-button" class="main-button">Find another place</button>
+      <div id="story-plaque" class="plaque plaque-big">
+        <p id="plaque-top"></p>
+        <h2 id="place-name"></h2>
+        <p id="plaque-bottom"></p>
+      </div>
+
+      <img id="place-image" class="photo" alt="" hidden>
+
+      <p id="place-story" class="story"></p>
+
+      <figure id="old-view" class="old-view" hidden>
+        <img id="old-view-image" alt="">
+        <figcaption>
+          An older view: <span id="old-view-caption"></span>
+        </figcaption>
+      </figure>
+
+      <a id="place-source" class="plain-button" target="_blank" rel="noopener">Read the full article on Wikipedia</a>
+      <p class="note">Words and pictures come from Wikipedia and Wikimedia Commons, loaded just now.</p>
+
+      <button id="again-button" class="sign-button" type="button">Send me somewhere else</button>
+      <button id="story-finds-button" class="plain-button" type="button">See your finds</button>
     </section>
+
+
+    <!-- Screen 4: everything you've found -->
+    <section id="finds-screen" hidden>
+      <button id="finds-back-button" class="text-button" type="button">Back</button>
+
+      <h2>Your finds</h2>
+      <p id="stats"></p>
+
+      <div id="finds-map" class="map map-small"></div>
+
+      <div id="finds-grid" class="finds-grid"></div>
+    </section>
+
   </main>
 </body>
 </html>

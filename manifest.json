@@ -1,0 +1,15 @@
+{
+  "name": "Hidden History",
+  "short_name": "Hidden History",
+  "description": "Pick how long you've got and get sent to somewhere nearby with a past.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e4e6e1",
+  "theme_color": "#1b4a9a",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

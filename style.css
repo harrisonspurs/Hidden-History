@@ -1,134 +1,434 @@
+/* Hidden History
+   The look is borrowed from the round blue plaques you see on old buildings,
+   and from enamel street signs. Blue enamel, white lettering, pale stone wall. */
+
+
+/* ---------- Fonts (kept in the fonts folder, so they work offline) ---------- */
+
+@font-face {
+  font-family: "Marcellus";
+  src: url("fonts/marcellus.woff2") format("woff2");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("fonts/atkinson-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("fonts/atkinson-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+
+/* ---------- Colours ---------- */
+
+:root {
+  --blue: #1b4a9a;        /* plaque enamel */
+  --blue-dark: #123672;   /* plaque edge */
+  --ink: #131c33;         /* text */
+  --stone: #e4e6e1;       /* the wall behind everything */
+  --white: #ffffff;
+  --pink: #c4177c;        /* "you are here", like footpaths on an OS map */
+  --grey: #4a5163;        /* quieter text */
+}
+
+
+/* ---------- Basics ---------- */
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  background: #eeeee8;
-  color: #222;
-  font-family: Arial, sans-serif;
+  background: var(--stone);
+  color: var(--ink);
+  font-family: "Atkinson Hyperlegible", Verdana, sans-serif;
+  font-size: 1rem;
   line-height: 1.5;
 }
 
 .app {
-  max-width: 420px;
-  min-height: 100vh;
+  max-width: 440px;
   margin: 0 auto;
-  padding: 20px;
-  background: #fbfaf6;
+  padding: 24px 20px 56px;
 }
 
-.title {
-  font-family: Georgia, serif;
-  font-size: 28px;
-  margin: 0 0 16px;
-  color: #1f3d2f;
+h1,
+h2 {
+  font-family: "Marcellus", Georgia, serif;
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0;
 }
 
 h2 {
-  font-family: Georgia, serif;
-  font-size: 22px;
-  margin: 24px 0 8px;
+  font-size: 2rem;
+  margin: 16px 0 8px;
 }
 
-.label {
-  font-weight: bold;
-  margin: 20px 0 8px;
-}
-
-.small {
-  font-size: 13px;
-  color: #666;
-}
-
-/* Option buttons */
-.options {
-  display: flex;
-  gap: 8px;
-}
-
-.mode-option,
-.time-option {
-  flex: 1;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: white;
-  font-size: 15px;
-  cursor: pointer;
-}
-
-.selected {
-  background: #1f3d2f;
-  color: white;
-  border-color: #1f3d2f;
-}
-
-/* Main buttons */
-.main-button {
-  display: block;
-  width: 100%;
-  margin-top: 20px;
-  padding: 14px;
-  border: none;
-  border-radius: 6px;
-  background: #1f3d2f;
-  color: white;
-  font-size: 16px;
-  text-align: center;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.small-button {
-  display: block;
-  margin: 12px auto 0;
-  border: none;
-  background: none;
-  color: #888;
-  font-size: 13px;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.link-button {
-  border: none;
-  background: none;
-  padding: 0;
-  color: #1f3d2f;
-  font-size: 15px;
-  cursor: pointer;
-}
-
-/* Map */
-#map {
-  height: 320px;
-  border-radius: 8px;
-  margin-top: 12px;
-}
-
-.distance {
-  font-size: 20px;
-  font-weight: bold;
-  text-align: center;
-  margin: 12px 0 0;
-}
-
-/* Story */
-#place-image {
-  width: 100%;
-  border-radius: 8px;
+p {
+  margin: 0 0 12px;
 }
 
 a {
-  color: #1f3d2f;
+  color: var(--blue);
 }
 
-/* Found list */
-#found-list {
-  padding-left: 20px;
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* A clear outline when you move around with a keyboard */
+:focus-visible {
+  outline: 3px solid var(--pink);
+  outline-offset: 3px;
 }
 
 [hidden] {
   display: none !important;
+}
+
+
+/* ---------- The plaque ---------- */
+
+.plaque {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 24%, #2c62bd, var(--blue) 62%);
+  color: var(--white);
+  font-family: "Marcellus", Georgia, serif;
+  text-align: center;
+  text-transform: uppercase;
+  /* blue rim, thin white ring, then a hard edge and a soft shadow on the wall */
+  box-shadow:
+    inset 0 0 0 6px var(--blue),
+    inset 0 0 0 8px rgba(255, 255, 255, 0.92),
+    0 3px 0 var(--blue-dark),
+    0 12px 20px rgba(18, 54, 114, 0.28);
+}
+
+.plaque-big {
+  width: min(74vw, 270px);
+  margin: 8px auto 28px;
+  padding: 36px;
+}
+
+.plaque-big h1,
+.plaque-big h2 {
+  font-size: 1.9rem;
+  letter-spacing: 0.04em;
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+
+.plaque-big p {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  margin: 0;
+}
+
+/* Long place names need smaller letters to fit in the circle */
+.plaque-long h2 {
+  font-size: 1.3rem;
+}
+
+/* The one bit of animation: the plaque being fixed to the wall when you arrive */
+.unveil {
+  animation: fix-to-wall 0.7s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+@keyframes fix-to-wall {
+  from {
+    opacity: 0;
+    transform: scale(1.3) rotate(-14deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unveil {
+    animation: none;
+  }
+}
+
+
+/* ---------- Home screen ---------- */
+
+.intro {
+  font-size: 1.0625rem;
+  margin-bottom: 8px;
+}
+
+/* A group of "pick one" buttons */
+.choices {
+  display: flex;
+  gap: 8px;
+  border: none;
+  margin: 22px 0 0;
+  padding: 0;
+}
+
+.choices-wrap {
+  flex-wrap: wrap;
+}
+
+.choices legend {
+  font-weight: 700;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.choices button {
+  flex: 1;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  background: var(--white);
+  white-space: nowrap;
+}
+
+.choices-wrap button {
+  flex: 0 1 auto;
+}
+
+/* The picked one turns into a little enamel sign */
+.choices button[aria-pressed="true"] {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: var(--white);
+  box-shadow: inset 0 0 0 2px var(--blue), inset 0 0 0 3.5px var(--white);
+}
+
+
+/* ---------- Buttons ---------- */
+
+/* The main action on each screen, styled like an enamel street sign */
+.sign-button {
+  display: block;
+  width: 100%;
+  min-height: 60px;
+  margin-top: 26px;
+  padding: 16px;
+  border: none;
+  border-radius: 4px;
+  background: var(--blue);
+  color: var(--white);
+  font-family: "Marcellus", Georgia, serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-decoration: none;
+  box-shadow:
+    inset 0 0 0 4px var(--blue),
+    inset 0 0 0 5.5px var(--white),
+    0 3px 0 var(--blue-dark);
+}
+
+.sign-button:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 0 0 4px var(--blue),
+    inset 0 0 0 5.5px var(--white),
+    0 1px 0 var(--blue-dark);
+}
+
+.sign-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* A second, quieter action */
+.plain-button {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 11px 16px;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  background: var(--white);
+  color: var(--ink);
+  text-align: center;
+  text-decoration: none;
+}
+
+/* Looks like a link */
+.text-button {
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.test-button {
+  display: block;
+  margin: 8px auto 0;
+  color: var(--grey);
+  font-size: 0.875rem;
+}
+
+
+/* ---------- Messages ---------- */
+
+.status {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-left: 5px solid var(--pink);
+  background: var(--white);
+}
+
+.status p {
+  margin: 0;
+}
+
+.note {
+  color: var(--grey);
+  font-size: 0.875rem;
+  margin-top: 10px;
+}
+
+.finds-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin-top: 32px;
+  padding-top: 14px;
+  border-top: 2px solid var(--ink);
+}
+
+
+/* ---------- On the way ---------- */
+
+.distance {
+  font-size: 2.4rem;
+  margin: 6px 0 10px;
+}
+
+.clue {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.map {
+  height: 340px;
+  margin-top: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  /* keeps the map under any focus outlines */
+  z-index: 0;
+}
+
+.map-small {
+  height: 240px;
+}
+
+/* Map pins */
+.pin-plaque {
+  border: 2px solid var(--white);
+  border-radius: 50%;
+  background: var(--blue);
+  color: var(--white);
+  font-family: "Marcellus", Georgia, serif;
+  font-size: 1.3rem;
+  line-height: 34px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(19, 28, 51, 0.5);
+}
+
+.pin-you {
+  border: 3px solid var(--white);
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 0 2px var(--pink), 0 2px 6px rgba(19, 28, 51, 0.5);
+}
+
+.pin-found {
+  border: 2px solid var(--white);
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue), 0 2px 5px rgba(19, 28, 51, 0.45);
+}
+
+
+/* ---------- The story ---------- */
+
+.photo {
+  display: block;
+  width: 100%;
+  /* stops a very tall picture filling the whole screen */
+  max-height: 60vh;
+  object-fit: cover;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  margin-bottom: 18px;
+}
+
+.story {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+.old-view {
+  margin: 20px 0;
+}
+
+.old-view img {
+  display: block;
+  width: 100%;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  /* a hint that it's an old picture */
+  filter: sepia(0.25);
+}
+
+.old-view figcaption {
+  color: var(--grey);
+  font-size: 0.875rem;
+  margin-top: 6px;
+}
+
+
+/* ---------- Your finds ---------- */
+
+.finds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 18px 14px;
+  margin-top: 24px;
+}
+
+.plaque-small {
+  padding: 18px;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  box-shadow:
+    inset 0 0 0 4px var(--blue),
+    inset 0 0 0 5.5px rgba(255, 255, 255, 0.92),
+    0 2px 0 var(--blue-dark),
+    0 6px 10px rgba(18, 54, 114, 0.25);
 }
