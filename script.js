@@ -7,7 +7,18 @@
 // Roughly how many metres you cover in a minute
 const speeds = {
   walking: 80,
-  cycling: 250
+  cycling: 250,
+  transit: 300  // buses and trams, including a bit of waiting
+};
+
+// Clean, light map tiles from CARTO (free, built on OpenStreetMap)
+const tileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+const tileCredit = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+// Free route finder run by the OpenStreetMap community in Germany (FOSSGIS)
+const routeServers = {
+  walking: "https://routing.openstreetmap.de/routed-foot/route/v1/driving/",
+  cycling: "https://routing.openstreetmap.de/routed-bike/route/v1/driving/"
 };
 
 // How close you need to be to unlock the story (metres)
@@ -28,7 +39,6 @@ const oldPictureWords = [
 let mode = "walking";
 let minutes = 30;
 let theme = "anything";
-let themeLabel = "Anything";
 
 let user = null;          // where you are: { lat, lng }
 let target = null;        // the place you're being sent to
@@ -42,6 +52,7 @@ let showingWiki = "";     // which story is on screen
 let map = null;
 let userMarker = null;
 let targetMarker = null;
+let routeLine = null;
 let watchId = null;
 
 let findsMap = null;
@@ -211,7 +222,7 @@ function pickPlace() {
     return null;
   }
   if (rightKind.length === 0) {
-    pickProblem = "No " + themeLabel.toLowerCase() + " in range. Try a longer time or Anything.";
+    pickProblem = "Nothing like that in range. Try a longer time or Anything.";
     return null;
   }
   if (fresh.length === 0) {
@@ -310,10 +321,11 @@ function showHunt() {
 
   // Only create the map once
   if (map === null) {
-    map = L.map("map");
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(map);
+    // No zoom buttons - you can pinch or scroll to zoom
+    map = L.map("map", { zoomControl: false });
+    L.tileLayer(tileUrl, { attribution: tileCredit, subdomains: "abcd", maxZoom: 20 }).addTo(map);
+
+    routeLine = L.polyline([], { color: "#111111", weight: 5, opacity: 0.85 }).addTo(map);
 
     const youIcon = L.divIcon({ className: "pin-you", iconSize: [20, 20] });
     const mysteryIcon = L.divIcon({ className: "pin-mystery", html: "?", iconSize: [40, 40] });
@@ -329,9 +341,12 @@ function showHunt() {
   targetMarker.setLatLng([target.lat, target.lng]);
   map.fitBounds([[user.lat, user.lng], [target.lat, target.lng]], { padding: [45, 45] });
 
-  document.getElementById("directions-link").href =
-    "https://www.google.com/maps/dir/?api=1" +
-    "&travelmode=" + (mode === "cycling" ? "bicycling" : "walking") +
+  drawRoute();
+
+  // There's no free bus and train planner, so public transport opens Google Maps
+  const transitLink = document.getElementById("transit-link");
+  transitLink.hidden = mode !== "transit";
+  transitLink.href = "https://www.google.com/maps/dir/?api=1&travelmode=transit" +
     "&destination=" + target.lat + "," + target.lng;
 
   // A clue, if we know the place is officially protected
@@ -346,6 +361,45 @@ function showHunt() {
 
   updateDistance();
   startTracking();
+}
+
+// Draws the route from you to the mystery place on the map
+async function drawRoute() {
+  const routeTime = document.getElementById("route-time");
+  const placeAtStart = target;
+
+  // To start with (and if anything goes wrong) just draw a dashed straight line
+  routeLine.setLatLngs([[user.lat, user.lng], [target.lat, target.lng]]);
+  routeLine.setStyle({ dashArray: "2 10" });
+  routeTime.textContent = "";
+
+  // No route for public transport - you'd need bus and train times
+  if (mode === "transit") return;
+
+  try {
+    // The route finder wants longitude first, then latitude
+    const url = routeServers[mode] +
+      user.lng + "," + user.lat + ";" + target.lng + "," + target.lat +
+      "?overview=full&geometries=geojson";
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // If you've skipped to another place while this loaded, leave it alone
+    if (target !== placeAtStart) return;
+
+    const route = data.routes[0];
+
+    // Swap each point from [lng, lat] to [lat, lng] for Leaflet
+    const points = route.geometry.coordinates.map(point => [point[1], point[0]]);
+    routeLine.setLatLngs(points);
+    routeLine.setStyle({ dashArray: null });
+
+    const routeMinutes = Math.max(1, Math.round(route.duration / 60));
+    routeTime.textContent = routeMinutes + " min " + (mode === "cycling" ? "by bike" : "walk");
+  } catch (error) {
+    // Keep the straight line
+  }
 }
 
 function updateDistance() {
@@ -518,10 +572,8 @@ function showFindsMap(finds) {
 
   // Only create the map once
   if (findsMap === null) {
-    findsMap = L.map("finds-map");
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(findsMap);
+    findsMap = L.map("finds-map", { zoomControl: false });
+    L.tileLayer(tileUrl, { attribution: tileCredit, subdomains: "abcd", maxZoom: 20 }).addTo(findsMap);
     findsMarkers = L.layerGroup().addTo(findsMap);
   }
 
@@ -580,18 +632,19 @@ function setUpChoices(groupId, onPick) {
   });
 }
 
-setUpChoices("mode-choices", value => {
-  mode = value;
+// The two dropdowns
+document.getElementById("mode-select").addEventListener("change", event => {
+  mode = event.target.value;
+});
+
+document.getElementById("theme-select").addEventListener("change", event => {
+  theme = event.target.value;
 });
 
 setUpChoices("time-choices", value => {
   minutes = Number(value);
 });
 
-setUpChoices("theme-choices", (value, label) => {
-  theme = value;
-  themeLabel = label;
-});
 
 goButton.addEventListener("click", findSomewhere);
 

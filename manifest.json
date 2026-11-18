@@ -1,7 +1,6 @@
 {
-  "name": "Hidden History",
-  "short_name": "Hidden History",
-  "description": "Pick a time. Get sent somewhere nearby with a story.",
+  "name": "Can't think of a name",
+  "short_name": "No name yet",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,4 +1,5 @@
 // finder.js - finds places with a past near a point on the map.
+// (Uses the themes list from places.js, so load that first.)
 //
 // It asks two free, open sources (no API keys needed):
 //   1. Wikidata  - for officially protected places (listed buildings, monuments)
@@ -39,9 +40,11 @@ function hasAnyWord(text, words) {
   return words.some(word => new RegExp("\\b" + word + "\\b").test(text));
 }
 
+// Keeps pages that sound historic, or that are about something that happened there
 function soundsHistoric(description) {
   if (!description) return false;
-  return hasAnyWord(description, historicWords) && !hasAnyWord(description, boringWords);
+  const historic = hasAnyWord(description, historicWords) || hasAnyWord(description, themes.interesting);
+  return historic && !hasAnyWord(description, boringWords);
 }
 
 

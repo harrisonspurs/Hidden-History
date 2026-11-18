@@ -117,15 +117,53 @@ button {
   margin-top: 8px;
 }
 
+/* When there's no big button above it */
+.button-row-gap {
+  margin-top: 24px;
+}
+
 
 /* ---------- Home screen ---------- */
 
-.intro {
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  margin: 40px 0 36px;
+/* The two dropdowns side by side */
+.pickers {
+  display: flex;
+  gap: 8px;
+  margin-top: 48px;
+}
+
+.picker {
+  position: relative;
+  flex: 1;
+}
+
+.picker select {
+  /* hide the browser's own arrow so we can draw a simple one */
+  appearance: none;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 40px 12px 20px;
+  border: none;
+  border-radius: 999px;
+  background: var(--black);
+  color: var(--white);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* The little arrow on the right of each dropdown */
+.picker::after {
+  content: "";
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--white);
+  border-bottom: 2px solid var(--white);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
 }
 
 /* A group of "pick one" buttons */

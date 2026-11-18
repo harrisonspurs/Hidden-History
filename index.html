@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hidden History</title>
-  <meta name="description" content="Pick a time. Get sent somewhere nearby with a story.">
+  <title>Can't think of a name</title>
 
   <!-- Lets people add the site to their phone's home screen -->
   <link rel="manifest" href="manifest.json">
@@ -27,34 +26,40 @@
     <!-- Screen 1: home -->
     <section id="home-screen">
       <header class="top">
-        <h1>Hidden History</h1>
+        <h1>Can't think of a name</h1>
         <button id="finds-button" class="pill-link" type="button"></button>
       </header>
 
-      <p class="intro">Pick a time. Get sent somewhere nearby with a story.</p>
+      <!-- Two dropdowns. The labels are hidden on screen but read out by screen readers. -->
+      <div class="pickers">
+        <label class="picker">
+          <span class="hidden-label">How are you getting there?</span>
+          <select id="mode-select">
+            <option value="walking">Walk</option>
+            <option value="cycling">Bike</option>
+            <option value="transit">Public transport</option>
+          </select>
+        </label>
 
-      <!-- The legends are hidden on screen but read out by screen readers -->
-      <fieldset id="mode-choices" class="choices">
-        <legend class="hidden-label">How are you travelling?</legend>
-        <button type="button" data-value="walking" aria-pressed="true">Walk</button>
-        <button type="button" data-value="cycling" aria-pressed="false">Bike</button>
-      </fieldset>
+        <label class="picker">
+          <span class="hidden-label">What sort of place?</span>
+          <select id="theme-select">
+            <option value="anything">Anything</option>
+            <option value="interesting">Interesting</option>
+            <option value="churches">Churches</option>
+            <option value="pubs">Pubs</option>
+            <option value="memorials">Memorials</option>
+            <option value="houses">Houses</option>
+            <option value="industry">Industry</option>
+          </select>
+        </label>
+      </div>
 
       <fieldset id="time-choices" class="choices">
         <legend class="hidden-label">How long have you got, there and back?</legend>
         <button type="button" data-value="15" aria-pressed="false">15 min</button>
         <button type="button" data-value="30" aria-pressed="true">30 min</button>
         <button type="button" data-value="60" aria-pressed="false">1 hr</button>
-      </fieldset>
-
-      <fieldset id="theme-choices" class="choices choices-wrap">
-        <legend class="hidden-label">What sort of place?</legend>
-        <button type="button" data-value="anything" aria-pressed="true">Anything</button>
-        <button type="button" data-value="churches" aria-pressed="false">Churches</button>
-        <button type="button" data-value="pubs" aria-pressed="false">Pubs</button>
-        <button type="button" data-value="industry" aria-pressed="false">Industry</button>
-        <button type="button" data-value="memorials" aria-pressed="false">Memorials</button>
-        <button type="button" data-value="houses" aria-pressed="false">Houses</button>
       </fieldset>
 
       <button id="go-button" class="main-button" type="button">Go</button>
@@ -74,6 +79,7 @@
       <div class="row">
         <div>
           <h2 id="distance" class="distance"></h2>
+          <p id="route-time" class="quiet"></p>
           <p class="quiet">Unlocks within 50 m</p>
         </div>
         <p id="clue" class="tag" hidden></p>
@@ -81,9 +87,9 @@
 
       <p id="hunt-note" class="quiet" hidden></p>
 
-      <a id="directions-link" class="main-button" target="_blank" rel="noopener">Directions</a>
+      <a id="transit-link" class="main-button" target="_blank" rel="noopener" hidden>Bus and train times</a>
 
-      <div class="button-row">
+      <div class="button-row button-row-gap">
         <button id="back-button" class="grey-button" type="button">Back</button>
         <button id="skip-button" class="grey-button" type="button">Skip</button>
       </div>
