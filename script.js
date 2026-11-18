@@ -11,9 +11,12 @@ const speeds = {
   transit: 300  // buses and trams, including a bit of waiting
 };
 
-// Clean, light map tiles from CARTO (free, built on OpenStreetMap)
-const tileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-const tileCredit = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+// Map tiles from OpenStreetMap (free, no key). style.css turns them grey.
+const tileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+const tileCredit = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
+// Get a fresh route after you've moved this far (metres)
+const rerouteDistance = 100;
 
 // Free route finder run by the OpenStreetMap community in Germany (FOSSGIS)
 const routeServers = {
@@ -53,6 +56,9 @@ let map = null;
 let userMarker = null;
 let targetMarker = null;
 let routeLine = null;
+let routeFor = null;      // which place the route on the map is for
+let routeFrom = null;     // where you were when the route was last drawn
+let following = true;     // does the map move with you?
 let watchId = null;
 
 let findsMap = null;
@@ -323,7 +329,13 @@ function showHunt() {
   if (map === null) {
     // No zoom buttons - you can pinch or scroll to zoom
     map = L.map("map", { zoomControl: false });
-    L.tileLayer(tileUrl, { attribution: tileCredit, subdomains: "abcd", maxZoom: 20 }).addTo(map);
+    L.tileLayer(tileUrl, { attribution: tileCredit, maxZoom: 19 }).addTo(map);
+
+    // If you move the map yourself, stop following until you tap Re-centre
+    map.on("dragstart", () => {
+      following = false;
+      document.getElementById("recentre-button").hidden = false;
+    });
 
     routeLine = L.polyline([], { color: "#111111", weight: 5, opacity: 0.85 }).addTo(map);
 
@@ -339,7 +351,7 @@ function showHunt() {
 
   userMarker.setLatLng([user.lat, user.lng]);
   targetMarker.setLatLng([target.lat, target.lng]);
-  map.fitBounds([[user.lat, user.lng], [target.lat, target.lng]], { padding: [45, 45] });
+  recentre();
 
   drawRoute();
 
@@ -363,15 +375,27 @@ function showHunt() {
   startTracking();
 }
 
+// Fits you and the mystery place on the map, and follows you again
+function recentre() {
+  following = true;
+  document.getElementById("recentre-button").hidden = true;
+  map.fitBounds([[user.lat, user.lng], [target.lat, target.lng]], { padding: [45, 45], maxZoom: 18 });
+}
+
 // Draws the route from you to the mystery place on the map
 async function drawRoute() {
   const routeTime = document.getElementById("route-time");
   const placeAtStart = target;
+  routeFrom = { lat: user.lat, lng: user.lng };
 
-  // To start with (and if anything goes wrong) just draw a dashed straight line
-  routeLine.setLatLngs([[user.lat, user.lng], [target.lat, target.lng]]);
-  routeLine.setStyle({ dashArray: "2 10" });
-  routeTime.textContent = "";
+  // For a new place (or public transport) start with a dashed straight line.
+  // If the route finder doesn't answer, that's what stays.
+  if (routeFor !== target || mode === "transit") {
+    routeLine.setLatLngs([[user.lat, user.lng], [target.lat, target.lng]]);
+    routeLine.setStyle({ dashArray: "2 10" });
+    routeTime.textContent = "";
+  }
+  routeFor = target;
 
   // No route for public transport - you'd need bus and train times
   if (mode === "transit") return;
@@ -421,6 +445,20 @@ function startTracking() {
       user.lng = position.coords.longitude;
       userMarker.setLatLng([user.lat, user.lng]);
       updateDistance();
+
+      // Stop here if that was close enough to arrive
+      if (watchId === null) return;
+
+      if (following) {
+        recentre();
+      }
+
+      // Public transport just has a straight line, so redraw it every time.
+      // Otherwise get a fresh route once you've moved far enough.
+      const moved = getDistance(user.lat, user.lng, routeFrom.lat, routeFrom.lng);
+      if (mode === "transit" || moved >= rerouteDistance) {
+        drawRoute();
+      }
     },
     () => {
       // If one check fails we just wait for the next one
@@ -654,6 +692,7 @@ demoButton.addEventListener("click", () => {
 });
 
 document.getElementById("skip-button").addEventListener("click", skipPlace);
+document.getElementById("recentre-button").addEventListener("click", recentre);
 document.getElementById("test-arrive").addEventListener("click", arrive);
 
 function goHome() {
