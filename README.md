@@ -1,6 +1,6 @@
 # Hidden History
 
-Say how long you've got, and the app sends you to somewhere nearby with a past.
+Pick a time and the app sends you somewhere nearby with a story.
 You only find out what it is when you get there.
 
 ## Running it
@@ -13,7 +13,7 @@ Location only works on `localhost` or `https`, not by double-clicking the file.
 1. You pick how you're travelling, how long you've got, and what sort of place you want.
 2. The app gets your location and looks for places within reach (there and back).
 3. A map shows you and a question mark. The story unlocks within 50 metres of it.
-4. Every place you find is saved on your device as a plaque in "Your finds".
+4. Every place you find is saved on your device under "Finds".
 
 ## Where the information comes from
 
@@ -33,7 +33,7 @@ All of these are free and need no API key.
 | File | What it does |
 |---|---|
 | `index.html` | The four screens: home, on the way, the story, your finds |
-| `style.css` | The look (blue plaques and enamel signs) |
+| `style.css` | The look |
 | `places.js` | The hand-picked backup places and the themes |
 | `finder.js` | Finds places near you from Wikidata and Wikipedia |
 | `script.js` | Everything else: screens, map, arriving, saved finds |

@@ -2,7 +2,7 @@
 // It saves a copy of the app's own files, so the app still opens with no signal.
 // It always tries the internet first, so you never get stuck on an old version.
 
-const cacheName = "hidden-history-v1";
+const cacheName = "hidden-history-v2";
 
 const appFiles = [
   "./",
@@ -14,9 +14,7 @@ const appFiles = [
   "manifest.json",
   "lib/leaflet/leaflet.js",
   "lib/leaflet/leaflet.css",
-  "fonts/marcellus.woff2",
-  "fonts/atkinson-regular.woff2",
-  "fonts/atkinson-bold.woff2",
+  "fonts/figtree.woff2",
   "icons/icon.svg",
   "icons/icon-192.png"
 ];

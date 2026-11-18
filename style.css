@@ -1,27 +1,12 @@
-/* Hidden History
-   The look is borrowed from the round blue plaques you see on old buildings,
-   and from enamel street signs. Blue enamel, white lettering, pale stone wall. */
+/* Hidden History - plain white, black buttons, one bright colour for the mystery pin */
 
 
-/* ---------- Fonts (kept in the fonts folder, so they work offline) ---------- */
+/* ---------- Font (kept in the fonts folder, so it works offline) ---------- */
 
 @font-face {
-  font-family: "Marcellus";
-  src: url("fonts/marcellus.woff2") format("woff2");
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Atkinson Hyperlegible";
-  src: url("fonts/atkinson-regular.woff2") format("woff2");
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Atkinson Hyperlegible";
-  src: url("fonts/atkinson-bold.woff2") format("woff2");
-  font-weight: 700;
+  font-family: "Figtree";
+  src: url("fonts/figtree.woff2") format("woff2");
+  font-weight: 300 900;
   font-display: swap;
 }
 
@@ -29,13 +14,11 @@
 /* ---------- Colours ---------- */
 
 :root {
-  --blue: #1b4a9a;        /* plaque enamel */
-  --blue-dark: #123672;   /* plaque edge */
-  --ink: #131c33;         /* text */
-  --stone: #e4e6e1;       /* the wall behind everything */
+  --black: #111111;
   --white: #ffffff;
-  --pink: #c4177c;        /* "you are here", like footpaths on an OS map */
-  --grey: #4a5163;        /* quieter text */
+  --grey: #f1f1f1;       /* unselected buttons */
+  --quiet: #6b6b6b;      /* small grey text */
+  --bright: #ff4d2e;     /* the mystery pin and your finds */
 }
 
 
@@ -47,9 +30,9 @@
 
 body {
   margin: 0;
-  background: var(--stone);
-  color: var(--ink);
-  font-family: "Atkinson Hyperlegible", Verdana, sans-serif;
+  background: var(--white);
+  color: var(--black);
+  font-family: "Figtree", Arial, sans-serif;
   font-size: 1rem;
   line-height: 1.5;
 }
@@ -57,28 +40,20 @@ body {
 .app {
   max-width: 440px;
   margin: 0 auto;
-  padding: 24px 20px 56px;
+  padding: 20px 20px 48px;
 }
 
 h1,
 h2 {
-  font-family: "Marcellus", Georgia, serif;
-  font-weight: 400;
+  font-size: 1.5rem;
+  font-weight: 800;
   line-height: 1.15;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 
-h2 {
-  font-size: 2rem;
-  margin: 16px 0 8px;
-}
-
 p {
-  margin: 0 0 12px;
-}
-
-a {
-  color: var(--blue);
+  margin: 0;
 }
 
 button {
@@ -87,94 +62,70 @@ button {
   cursor: pointer;
 }
 
+.quiet {
+  color: var(--quiet);
+  font-size: 0.9rem;
+}
+
 /* A clear outline when you move around with a keyboard */
 :focus-visible {
-  outline: 3px solid var(--pink);
-  outline-offset: 3px;
+  outline: 3px solid var(--bright);
+  outline-offset: 2px;
 }
 
 [hidden] {
   display: none !important;
 }
 
+/* Hidden on screen, but still read out by screen readers */
+.hidden-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
 
-/* ---------- The plaque ---------- */
 
-.plaque {
+/* ---------- Layout helpers ---------- */
+
+/* Title on the left, small button on the right */
+.top {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
-  border: none;
-  border-radius: 50%;
-  background: radial-gradient(circle at 32% 24%, #2c62bd, var(--blue) 62%);
-  color: var(--white);
-  font-family: "Marcellus", Georgia, serif;
-  text-align: center;
-  text-transform: uppercase;
-  /* blue rim, thin white ring, then a hard edge and a soft shadow on the wall */
-  box-shadow:
-    inset 0 0 0 6px var(--blue),
-    inset 0 0 0 8px rgba(255, 255, 255, 0.92),
-    0 3px 0 var(--blue-dark),
-    0 12px 20px rgba(18, 54, 114, 0.28);
+  justify-content: space-between;
+  min-height: 44px;
 }
 
-.plaque-big {
-  width: min(74vw, 270px);
-  margin: 8px auto 28px;
-  padding: 36px;
+/* Two things side by side */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-.plaque-big h1,
-.plaque-big h2 {
-  font-size: 1.9rem;
-  letter-spacing: 0.04em;
-  margin: 10px 0;
-  overflow-wrap: anywhere;
+.row-start {
+  justify-content: flex-start;
+  margin-top: 8px;
 }
 
-.plaque-big p {
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  line-height: 1.3;
-  margin: 0;
-}
-
-/* Long place names need smaller letters to fit in the circle */
-.plaque-long h2 {
-  font-size: 1.3rem;
-}
-
-/* The one bit of animation: the plaque being fixed to the wall when you arrive */
-.unveil {
-  animation: fix-to-wall 0.7s cubic-bezier(0.2, 1.3, 0.4, 1) both;
-}
-
-@keyframes fix-to-wall {
-  from {
-    opacity: 0;
-    transform: scale(1.3) rotate(-14deg);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .unveil {
-    animation: none;
-  }
+.button-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 
 /* ---------- Home screen ---------- */
 
 .intro {
-  font-size: 1.0625rem;
-  margin-bottom: 8px;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 40px 0 36px;
 }
 
 /* A group of "pick one" buttons */
@@ -182,7 +133,7 @@ button {
   display: flex;
   gap: 8px;
   border: none;
-  margin: 22px 0 0;
+  margin: 12px 0 0;
   padding: 0;
 }
 
@@ -190,19 +141,14 @@ button {
   flex-wrap: wrap;
 }
 
-.choices legend {
-  font-weight: 700;
-  padding: 0;
-  margin-bottom: 8px;
-}
-
 .choices button {
   flex: 1;
   min-height: 48px;
-  padding: 10px 12px;
-  border: 2px solid var(--ink);
-  border-radius: 3px;
-  background: var(--white);
+  padding: 10px 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--grey);
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -210,74 +156,71 @@ button {
   flex: 0 1 auto;
 }
 
-/* The picked one turns into a little enamel sign */
 .choices button[aria-pressed="true"] {
-  border-color: var(--blue);
-  background: var(--blue);
+  background: var(--black);
   color: var(--white);
-  box-shadow: inset 0 0 0 2px var(--blue), inset 0 0 0 3.5px var(--white);
 }
 
 
 /* ---------- Buttons ---------- */
 
-/* The main action on each screen, styled like an enamel street sign */
-.sign-button {
+/* The main action on each screen */
+.main-button {
   display: block;
   width: 100%;
-  min-height: 60px;
-  margin-top: 26px;
-  padding: 16px;
+  min-height: 58px;
+  margin-top: 28px;
+  padding: 15px;
   border: none;
-  border-radius: 4px;
-  background: var(--blue);
+  border-radius: 999px;
+  background: var(--black);
   color: var(--white);
-  font-family: "Marcellus", Georgia, serif;
-  font-size: 1.3rem;
-  letter-spacing: 0.02em;
+  font-size: 1.15rem;
+  font-weight: 700;
   text-align: center;
   text-decoration: none;
-  box-shadow:
-    inset 0 0 0 4px var(--blue),
-    inset 0 0 0 5.5px var(--white),
-    0 3px 0 var(--blue-dark);
 }
 
-.sign-button:active {
-  transform: translateY(2px);
-  box-shadow:
-    inset 0 0 0 4px var(--blue),
-    inset 0 0 0 5.5px var(--white),
-    0 1px 0 var(--blue-dark);
+.main-button:active {
+  transform: scale(0.98);
 }
 
-.sign-button:disabled {
-  opacity: 0.6;
+.main-button:disabled {
+  opacity: 0.5;
   cursor: wait;
 }
 
-/* A second, quieter action */
-.plain-button {
-  display: block;
-  width: 100%;
+/* Quieter actions */
+.grey-button {
+  flex: 1;
   min-height: 48px;
-  margin-top: 12px;
-  padding: 11px 16px;
-  border: 2px solid var(--ink);
-  border-radius: 3px;
-  background: var(--white);
-  color: var(--ink);
-  text-align: center;
-  text-decoration: none;
+  border: none;
+  border-radius: 999px;
+  background: var(--grey);
+  font-weight: 600;
+}
+
+/* The small button in the corner */
+.pill-link {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--grey);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 /* Looks like a link */
 .text-button {
+  display: inline-block;
   min-height: 44px;
-  padding: 0;
+  padding: 10px 0;
   border: none;
   background: none;
-  color: var(--blue);
+  color: var(--black);
+  font-size: 0.9rem;
+  font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -285,8 +228,8 @@ button {
 .test-button {
   display: block;
   margin: 8px auto 0;
-  color: var(--grey);
-  font-size: 0.875rem;
+  color: var(--quiet);
+  font-weight: 400;
 }
 
 
@@ -294,82 +237,65 @@ button {
 
 .status {
   margin-top: 16px;
-  padding: 12px 14px;
-  border-left: 5px solid var(--pink);
-  background: var(--white);
-}
-
-.status p {
-  margin: 0;
-}
-
-.note {
-  color: var(--grey);
-  font-size: 0.875rem;
-  margin-top: 10px;
-}
-
-.finds-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 14px;
-  margin-top: 32px;
-  padding-top: 14px;
-  border-top: 2px solid var(--ink);
+  text-align: center;
 }
 
 
 /* ---------- On the way ---------- */
 
-.distance {
-  font-size: 2.4rem;
-  margin: 6px 0 10px;
-}
-
-.clue {
-  color: var(--blue);
-  font-weight: 700;
-}
-
 .map {
-  height: 340px;
-  margin-top: 16px;
-  border: 2px solid var(--ink);
-  border-radius: 3px;
-  /* keeps the map under any focus outlines */
+  height: 52vh;
+  min-height: 300px;
+  border-radius: 20px;
+  /* keeps the map under everything else */
   z-index: 0;
 }
 
 .map-small {
-  height: 240px;
+  height: 220px;
+  min-height: 0;
+  margin-top: 20px;
+}
+
+.distance {
+  font-size: 2.6rem;
+  letter-spacing: -0.03em;
+}
+
+/* A small label, like "Grade II listed building" */
+.tag {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--grey);
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 /* Map pins */
-.pin-plaque {
-  border: 2px solid var(--white);
+.pin-mystery {
+  border: 3px solid var(--white);
   border-radius: 50%;
-  background: var(--blue);
+  background: var(--bright);
   color: var(--white);
-  font-family: "Marcellus", Georgia, serif;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
+  font-weight: 800;
   line-height: 34px;
   text-align: center;
-  box-shadow: 0 2px 6px rgba(19, 28, 51, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .pin-you {
   border: 3px solid var(--white);
   border-radius: 50%;
-  background: var(--pink);
-  box-shadow: 0 0 0 2px var(--pink), 0 2px 6px rgba(19, 28, 51, 0.5);
+  background: var(--black);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .pin-found {
-  border: 2px solid var(--white);
+  border: 3px solid var(--white);
   border-radius: 50%;
-  background: var(--blue);
-  box-shadow: 0 0 0 2px var(--blue), 0 2px 5px rgba(19, 28, 51, 0.45);
+  background: var(--bright);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
 }
 
 
@@ -379,56 +305,85 @@ button {
   display: block;
   width: 100%;
   /* stops a very tall picture filling the whole screen */
-  max-height: 60vh;
+  max-height: 52vh;
   object-fit: cover;
-  border: 2px solid var(--ink);
-  border-radius: 3px;
-  margin-bottom: 18px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.place-name {
+  font-size: 2rem;
+  letter-spacing: -0.03em;
 }
 
 .story {
-  font-size: 1.0625rem;
+  font-size: 1.05rem;
   line-height: 1.6;
+  margin-top: 18px;
 }
 
 .old-view {
-  margin: 20px 0;
+  margin: 20px 0 4px;
 }
 
 .old-view img {
   display: block;
   width: 100%;
-  border: 2px solid var(--ink);
-  border-radius: 3px;
-  /* a hint that it's an old picture */
-  filter: sepia(0.25);
+  border-radius: 14px;
 }
 
 .old-view figcaption {
-  color: var(--grey);
-  font-size: 0.875rem;
+  color: var(--quiet);
+  font-size: 0.85rem;
   margin-top: 6px;
 }
 
 
-/* ---------- Your finds ---------- */
+/* ---------- Finds ---------- */
 
-.finds-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
-  gap: 18px 14px;
+.stats {
+  display: flex;
+  gap: 8px;
   margin-top: 24px;
 }
 
-.plaque-small {
-  padding: 18px;
-  font-size: 0.72rem;
-  letter-spacing: 0.05em;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-  box-shadow:
-    inset 0 0 0 4px var(--blue),
-    inset 0 0 0 5.5px rgba(255, 255, 255, 0.92),
-    0 2px 0 var(--blue-dark),
-    0 6px 10px rgba(18, 54, 114, 0.25);
+.stats p {
+  flex: 1;
+  color: var(--quiet);
+  font-size: 0.85rem;
+}
+
+.stats strong {
+  display: block;
+  color: var(--black);
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.finds-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.finds-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 0;
+  border: none;
+  border-bottom: 1px solid var(--grey);
+  background: none;
+  font-weight: 600;
+  text-align: left;
+}
+
+.finds-list .quiet {
+  flex-shrink: 0;
+  font-weight: 400;
 }

@@ -157,17 +157,10 @@ function getStreak(finds) {
   return streak;
 }
 
+// The button in the corner of the home screen shows how many you've found
 function showHomeSummary() {
   const count = getFinds().length;
-  const text = document.getElementById("finds-summary-text");
-
-  if (count === 0) {
-    text.textContent = "Nothing found yet.";
-  } else if (count === 1) {
-    text.textContent = "1 place found so far.";
-  } else {
-    text.textContent = count + " places found so far.";
-  }
+  document.getElementById("finds-button").textContent = count + " found";
 }
 
 
@@ -210,19 +203,19 @@ function pickPlace() {
   });
 
   if (inRange.length === 0 && searchFailed) {
-    pickProblem = "Couldn't reach Wikipedia, and none of the built-in places are close enough. Check your connection, then try again.";
+    pickProblem = "No connection, and nothing saved is close enough.";
     return null;
   }
   if (inRange.length === 0) {
-    pickProblem = "Nothing with a Wikipedia page is that close. Try a longer trip.";
+    pickProblem = "Nothing in range. Try a longer time.";
     return null;
   }
   if (rightKind.length === 0) {
-    pickProblem = "Nothing under \"" + themeLabel + "\" is within reach. Try a longer trip, or choose Anything.";
+    pickProblem = "No " + themeLabel.toLowerCase() + " in range. Try a longer time or Anything.";
     return null;
   }
   if (fresh.length === 0) {
-    pickProblem = "You've already found or passed on everything in range. Try a longer trip or a different sort of place.";
+    pickProblem = "You've seen everything in range. Try a longer time.";
     return null;
   }
 
@@ -238,12 +231,12 @@ function pickPlace() {
 
 function findSomewhere() {
   if (!navigator.geolocation) {
-    setStatus("This browser can't share your location.", true);
+    setStatus("This browser can't share location.", true);
     return;
   }
 
   goButton.disabled = true;
-  setStatus("Finding where you are...");
+  setStatus("Finding you...");
 
   navigator.geolocation.getCurrentPosition(
     position => {
@@ -257,9 +250,9 @@ function findSomewhere() {
       goButton.disabled = false;
 
       if (error.code === error.PERMISSION_DENIED) {
-        setStatus("Location is turned off for this site. Allow it in your browser's site settings, then try again.", true);
+        setStatus("Location is off. Turn it on in your browser settings.", true);
       } else {
-        setStatus("Couldn't work out where you are. Try again outdoors or near a window.", true);
+        setStatus("Couldn't find you. Try again outside.", true);
       }
     },
     { enableHighAccuracy: true, timeout: 15000 }
@@ -268,7 +261,7 @@ function findSomewhere() {
 
 async function startTrip() {
   goButton.disabled = true;
-  setStatus("Looking for places with a past...");
+  setStatus("Searching...");
 
   // Our hand-picked places + whatever Wikidata and Wikipedia find nearby
   const result = await findPlaces(user, getMaxDistance());
@@ -322,8 +315,8 @@ function showHunt() {
       attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
 
-    const youIcon = L.divIcon({ className: "pin-you", iconSize: [18, 18] });
-    const mysteryIcon = L.divIcon({ className: "pin-plaque", html: "?", iconSize: [38, 38] });
+    const youIcon = L.divIcon({ className: "pin-you", iconSize: [20, 20] });
+    const mysteryIcon = L.divIcon({ className: "pin-mystery", html: "?", iconSize: [40, 40] });
 
     userMarker = L.marker([user.lat, user.lng], { icon: youIcon, alt: "You" }).addTo(map);
     targetMarker = L.marker([target.lat, target.lng], { icon: mysteryIcon, alt: "The mystery place" }).addTo(map);
@@ -344,12 +337,12 @@ function showHunt() {
   // A clue, if we know the place is officially protected
   const clue = document.getElementById("clue");
   clue.hidden = !target.heritage;
-  clue.textContent = "Clue: " + target.heritage + ".";
+  clue.textContent = target.heritage;
 
   // Be honest if the live search didn't work
   const note = document.getElementById("hunt-note");
   note.hidden = !searchFailed;
-  note.textContent = "Couldn't reach Wikipedia, so this one is from the built-in list. Check your connection for more places.";
+  note.textContent = "No connection. This is a saved place.";
 
   updateDistance();
   startTracking();
@@ -357,7 +350,7 @@ function showHunt() {
 
 function updateDistance() {
   const metres = getDistance(user.lat, user.lng, target.lat, target.lng);
-  document.getElementById("distance").textContent = "It's " + niceDistance(metres) + " away";
+  document.getElementById("distance").textContent = niceDistance(metres);
 
   if (metres <= arriveDistance) {
     arrive();
@@ -398,24 +391,22 @@ function arrive() {
 
   // Show it the way it was saved, so the date is there
   const find = getFinds().find(f => f.wiki === target.wiki);
-  showStory(find, true);
+  showStory(find);
 }
 
-// Shows the story screen for a place. justFound is true when you've only just got there.
-function showStory(place, justFound) {
+// Shows the story screen for a place
+function showStory(place) {
   showingWiki = place.wiki;
 
-  // Fill in the plaque
-  const plaque = document.getElementById("story-plaque");
-  document.getElementById("plaque-top").textContent = place.heritage || "You found";
   document.getElementById("place-name").textContent = place.name;
-  document.getElementById("plaque-bottom").textContent = "Found " + niceDate(place.date);
+  document.getElementById("place-date").textContent = "Found " + niceDate(place.date);
 
-  plaque.classList.toggle("plaque-long", place.name.length > 26);
-  plaque.classList.toggle("unveil", justFound);
+  const tag = document.getElementById("place-tag");
+  tag.hidden = !place.heritage;
+  tag.textContent = place.heritage;
 
   // Clear whatever the last story left behind
-  document.getElementById("place-story").textContent = "Loading the story...";
+  document.getElementById("place-story").textContent = "Loading...";
   document.getElementById("place-image").hidden = true;
   document.getElementById("old-view").hidden = true;
   document.getElementById("place-source").href = "https://en.wikipedia.org/wiki/" + encodeURIComponent(place.wiki);
@@ -449,7 +440,7 @@ async function loadStory(wikiTitle) {
     }
   } catch (error) {
     if (wikiTitle !== showingWiki) return;
-    storyText.textContent = "The story didn't load. Check your connection, or open the full article below.";
+    storyText.textContent = "Couldn't load the story. Check your connection.";
   }
 }
 
@@ -503,31 +494,21 @@ function showFinds() {
 
   showStats(finds);
   showFindsMap(finds);
-  showFindsGrid(finds);
+  showFindsList(finds);
 }
 
 function showStats(finds) {
-  const stats = document.getElementById("stats");
-
-  if (finds.length === 0) {
-    stats.textContent = "Nothing yet. Your first find will hang here.";
-    return;
-  }
+  document.getElementById("finds-empty").hidden = finds.length > 0;
+  document.getElementById("stats").hidden = finds.length === 0;
 
   let total = 0;
   for (const find of finds) {
     total += find.metres;
   }
 
-  let text = finds.length === 1 ? "1 place found. " : finds.length + " places found. ";
-  text += niceDistance(total) + " covered to reach them.";
-
-  const streak = getStreak(finds);
-  if (streak >= 2) {
-    text += " You've found something " + streak + " days in a row.";
-  }
-
-  stats.textContent = text;
+  document.getElementById("stat-places").textContent = finds.length;
+  document.getElementById("stat-distance").textContent = niceDistance(total);
+  document.getElementById("stat-streak").textContent = getStreak(finds);
 }
 
 function showFindsMap(finds) {
@@ -547,7 +528,7 @@ function showFindsMap(finds) {
   findsMap.invalidateSize();
   findsMarkers.clearLayers();
 
-  const dotIcon = L.divIcon({ className: "pin-found", iconSize: [20, 20] });
+  const dotIcon = L.divIcon({ className: "pin-found", iconSize: [18, 18] });
 
   for (const find of finds) {
     const marker = L.marker([find.lat, find.lng], { icon: dotIcon, alt: find.name });
@@ -559,18 +540,27 @@ function showFindsMap(finds) {
   findsMap.fitBounds(corners, { padding: [30, 30], maxZoom: 16 });
 }
 
-// One small plaque for each place. Tap one to read its story again.
-function showFindsGrid(finds) {
-  const grid = document.getElementById("finds-grid");
-  grid.innerHTML = "";
+// One row for each place, newest first. Tap one to read its story again.
+function showFindsList(finds) {
+  const list = document.getElementById("finds-list");
+  list.innerHTML = "";
 
-  for (const find of finds) {
+  for (const find of [...finds].reverse()) {
+    const name = document.createElement("span");
+    name.textContent = find.name;
+
+    const date = document.createElement("span");
+    date.className = "quiet";
+    date.textContent = niceDate(find.date);
+
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "plaque plaque-small";
-    button.textContent = find.name;
-    button.addEventListener("click", () => showStory(find, false));
-    grid.appendChild(button);
+    button.append(name, date);
+    button.addEventListener("click", () => showStory(find));
+
+    const row = document.createElement("li");
+    row.appendChild(button);
+    list.appendChild(row);
   }
 }
 
@@ -621,9 +611,10 @@ function goHome() {
 }
 
 document.getElementById("back-button").addEventListener("click", goHome);
+document.getElementById("story-home-button").addEventListener("click", goHome);
 document.getElementById("finds-back-button").addEventListener("click", goHome);
 
-// "Send me somewhere else" goes home and starts a new search with the same choices
+// "Next place" goes home and starts a new search with the same choices
 document.getElementById("again-button").addEventListener("click", () => {
   goHome();
   findSomewhere();

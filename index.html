@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hidden History</title>
-  <meta name="description" content="Pick how long you've got and get sent to somewhere nearby with a past.">
+  <meta name="description" content="Pick a time. Get sent somewhere nearby with a story.">
 
   <!-- Lets people add the site to their phone's home screen -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1b4a9a">
+  <meta name="theme-color" content="#ffffff">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
 
@@ -26,111 +26,119 @@
 
     <!-- Screen 1: home -->
     <section id="home-screen">
-      <div class="plaque plaque-big">
-        <p>Find the</p>
+      <header class="top">
         <h1>Hidden History</h1>
-        <p>on your doorstep</p>
-      </div>
+        <button id="finds-button" class="pill-link" type="button"></button>
+      </header>
 
-      <p class="intro">
-        Say how long you've got. You'll be sent to somewhere nearby with a past,
-        and you only find out what it is when you get there.
-      </p>
+      <p class="intro">Pick a time. Get sent somewhere nearby with a story.</p>
 
+      <!-- The legends are hidden on screen but read out by screen readers -->
       <fieldset id="mode-choices" class="choices">
-        <legend>How are you travelling?</legend>
-        <button type="button" data-value="walking" aria-pressed="true">On foot</button>
-        <button type="button" data-value="cycling" aria-pressed="false">By bike</button>
+        <legend class="hidden-label">How are you travelling?</legend>
+        <button type="button" data-value="walking" aria-pressed="true">Walk</button>
+        <button type="button" data-value="cycling" aria-pressed="false">Bike</button>
       </fieldset>
 
       <fieldset id="time-choices" class="choices">
-        <legend>How long have you got, there and back?</legend>
-        <button type="button" data-value="15" aria-pressed="false">15 minutes</button>
-        <button type="button" data-value="30" aria-pressed="true">30 minutes</button>
-        <button type="button" data-value="60" aria-pressed="false">1 hour</button>
+        <legend class="hidden-label">How long have you got, there and back?</legend>
+        <button type="button" data-value="15" aria-pressed="false">15 min</button>
+        <button type="button" data-value="30" aria-pressed="true">30 min</button>
+        <button type="button" data-value="60" aria-pressed="false">1 hr</button>
       </fieldset>
 
       <fieldset id="theme-choices" class="choices choices-wrap">
-        <legend>What sort of place?</legend>
+        <legend class="hidden-label">What sort of place?</legend>
         <button type="button" data-value="anything" aria-pressed="true">Anything</button>
         <button type="button" data-value="churches" aria-pressed="false">Churches</button>
         <button type="button" data-value="pubs" aria-pressed="false">Pubs</button>
         <button type="button" data-value="industry" aria-pressed="false">Industry</button>
         <button type="button" data-value="memorials" aria-pressed="false">Memorials</button>
-        <button type="button" data-value="houses" aria-pressed="false">Halls and houses</button>
+        <button type="button" data-value="houses" aria-pressed="false">Houses</button>
       </fieldset>
 
-      <button id="go-button" class="sign-button" type="button">Send me somewhere</button>
+      <button id="go-button" class="main-button" type="button">Go</button>
 
       <!-- Messages and problems show up here -->
       <div id="status" class="status" role="status" hidden>
         <p id="status-text"></p>
-        <button id="demo-button" class="text-button" type="button" hidden>
-          Start from Manchester city centre instead
-        </button>
+        <button id="demo-button" class="text-button" type="button" hidden>Use Manchester instead</button>
       </div>
-
-      <p class="finds-summary">
-        <span id="finds-summary-text"></span>
-        <button id="finds-button" class="text-button" type="button">See your finds</button>
-      </p>
     </section>
 
 
     <!-- Screen 2: on the way -->
     <section id="hunt-screen" hidden>
-      <button id="back-button" class="text-button" type="button">Back</button>
-
-      <h2 id="distance" class="distance"></h2>
-      <p>Head for the question mark. You'll find out what it is when you're within 50 metres.</p>
-      <p id="clue" class="clue" hidden></p>
-
       <div id="map" class="map"></div>
-      <p id="hunt-note" class="note" hidden></p>
 
-      <a id="directions-link" class="sign-button" target="_blank" rel="noopener">Open directions</a>
-      <button id="skip-button" class="plain-button" type="button">Pick a different place</button>
-      <button id="test-arrive" class="text-button test-button" type="button">I'm here (for testing)</button>
+      <div class="row">
+        <div>
+          <h2 id="distance" class="distance"></h2>
+          <p class="quiet">Unlocks within 50 m</p>
+        </div>
+        <p id="clue" class="tag" hidden></p>
+      </div>
+
+      <p id="hunt-note" class="quiet" hidden></p>
+
+      <a id="directions-link" class="main-button" target="_blank" rel="noopener">Directions</a>
+
+      <div class="button-row">
+        <button id="back-button" class="grey-button" type="button">Back</button>
+        <button id="skip-button" class="grey-button" type="button">Skip</button>
+      </div>
+
+      <button id="test-arrive" class="text-button test-button" type="button">Test: arrive now</button>
     </section>
 
 
     <!-- Screen 3: the story -->
     <section id="story-screen" hidden>
-      <div id="story-plaque" class="plaque plaque-big">
-        <p id="plaque-top"></p>
-        <h2 id="place-name"></h2>
-        <p id="plaque-bottom"></p>
-      </div>
-
       <img id="place-image" class="photo" alt="" hidden>
+
+      <h2 id="place-name" class="place-name"></h2>
+
+      <div class="row row-start">
+        <p id="place-tag" class="tag" hidden></p>
+        <p id="place-date" class="quiet"></p>
+      </div>
 
       <p id="place-story" class="story"></p>
 
       <figure id="old-view" class="old-view" hidden>
         <img id="old-view-image" alt="">
-        <figcaption>
-          An older view: <span id="old-view-caption"></span>
-        </figcaption>
+        <figcaption id="old-view-caption"></figcaption>
       </figure>
 
-      <a id="place-source" class="plain-button" target="_blank" rel="noopener">Read the full article on Wikipedia</a>
-      <p class="note">Words and pictures come from Wikipedia and Wikimedia Commons, loaded just now.</p>
+      <a id="place-source" class="text-button" target="_blank" rel="noopener">From Wikipedia. Read more</a>
 
-      <button id="again-button" class="sign-button" type="button">Send me somewhere else</button>
-      <button id="story-finds-button" class="plain-button" type="button">See your finds</button>
+      <button id="again-button" class="main-button" type="button">Next place</button>
+
+      <div class="button-row">
+        <button id="story-home-button" class="grey-button" type="button">Home</button>
+        <button id="story-finds-button" class="grey-button" type="button">Finds</button>
+      </div>
     </section>
 
 
     <!-- Screen 4: everything you've found -->
     <section id="finds-screen" hidden>
-      <button id="finds-back-button" class="text-button" type="button">Back</button>
+      <header class="top">
+        <h2>Finds</h2>
+        <button id="finds-back-button" class="pill-link" type="button">Back</button>
+      </header>
 
-      <h2>Your finds</h2>
-      <p id="stats"></p>
+      <p id="finds-empty" class="quiet" hidden>Nothing yet.</p>
+
+      <div id="stats" class="stats">
+        <p><strong id="stat-places"></strong> places</p>
+        <p><strong id="stat-distance"></strong> covered</p>
+        <p><strong id="stat-streak"></strong> day streak</p>
+      </div>
 
       <div id="finds-map" class="map map-small"></div>
 
-      <div id="finds-grid" class="finds-grid"></div>
+      <ul id="finds-list" class="finds-list"></ul>
     </section>
 
   </main>
