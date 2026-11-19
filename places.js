@@ -1,10 +1,5 @@
-// A small hand-picked list of places around Manchester and Salford.
-// The app also finds places live (see finder.js) - this list is the backup,
-// and makes sure a few favourites are always included.
-//
-// "wiki" is the Wikipedia page title. The story loads from there when you arrive.
-// Coordinates and descriptions were checked against Wikipedia in November 2026.
-
+// backup places for when wikipedia can't be reached
+// "wiki" = the wikipedia page title, the story loads from there
 const places = [
   { name: "Ordsall Hall",                   wiki: "Ordsall_Hall",                   lat: 53.4693, lng: -2.2776, description: "Historic country house" },
   { name: "Salford Lads' Club",             wiki: "Salford_Lads'_Club",             lat: 53.4769, lng: -2.2744, description: "Recreational club" },
@@ -22,9 +17,7 @@ const places = [
   { name: "Victoria Baths",                 wiki: "Victoria_Baths",                 lat: 53.4600, lng: -2.2160, description: "Historical bathing venue" }
 ];
 
-
-// The kinds of place in the dropdown on the home screen.
-// A place matches if its name or description contains one of the words.
+// words for each option in the "Anything" dropdown
 const themes = {
   anything:    [],
   interesting: ["massacre", "attack", "bombing", "riot", "disaster", "explosion", "battle",

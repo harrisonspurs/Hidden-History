@@ -1,71 +1,67 @@
-// script.js - the app itself: the screens, the map, and keeping track of finds.
-// Finding places is in finder.js. The hand-picked places and themes are in places.js.
-
-
-// ---------- Settings ----------
-
-// Roughly how many metres you cover in a minute
 const speeds = {
-  walking: 80,
+  walking: 80,   // metres per minute
   cycling: 250,
-  transit: 300  // buses and trams, including a bit of waiting
+  transit: 300
 };
 
-// Map tiles from OpenStreetMap (free, no key). style.css turns them grey.
+const arriveDistance = 50;
+const rerouteDistance = 100;
+const demoLocation = { lat: 53.4780, lng: -2.2430 };
+
 const tileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const tileCredit = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
-// Get a fresh route after you've moved this far (metres)
-const rerouteDistance = 100;
-
-// Free route finder run by the OpenStreetMap community in Germany (FOSSGIS)
 const routeServers = {
   walking: "https://routing.openstreetmap.de/routed-foot/route/v1/driving/",
   cycling: "https://routing.openstreetmap.de/routed-bike/route/v1/driving/"
 };
 
-// How close you need to be to unlock the story (metres)
-const arriveDistance = 50;
+// words that make a wikipedia page sound historic
+const historicWords = [
+  "listed", "historic", "historical", "heritage", "former", "century",
+  "church", "chapel", "cathedral", "abbey", "priory",
+  "museum", "library", "gallery", "theatre",
+  "memorial", "monument", "statue", "sculpture",
+  "hall", "house", "manor", "castle", "pub", "inn",
+  "mill", "warehouse", "canal", "viaduct", "barracks",
+  "fort", "ruin", "ruins", "park", "cemetery"
+];
 
-// Used if someone can't share their location but still wants to try the app
-const demoLocation = { lat: 53.4780, lng: -2.2430 };
+// stuff that matches above but is boring
+const boringWords = [
+  "tram stop", "under construction", "electoral ward", "retail park",
+  "stadium", "radio station"
+];
 
-// A caption needs one of these words (plus an old year) to count as "an older view"
 const oldPictureWords = [
   "engraving", "painting", "drawing", "sketch", "illustration", "print",
   "postcard", "lithograph", "etching", "watercolour", "photograph", "photographed"
 ];
 
-
-// ---------- Variables ----------
-
 let mode = "walking";
 let minutes = 30;
 let theme = "anything";
 
-let user = null;          // where you are: { lat, lng }
-let target = null;        // the place you're being sent to
-let nearbyPlaces = [];    // every place we know about for this trip
-let skipped = [];         // places you passed on during this trip
-let searchFailed = false; // true if Wikipedia and Wikidata couldn't be reached
-let pickProblem = "";     // why no place could be picked
-let tripMetres = 0;       // how far away the place was when you set off
-let showingWiki = "";     // which story is on screen
+let user = null;
+let target = null;
+let nearbyPlaces = [];
+let skipped = [];
+let searchFailed = false;
+let pickProblem = "";
+let tripMetres = 0;
+let showingWiki = "";
 
 let map = null;
 let userMarker = null;
 let targetMarker = null;
 let routeLine = null;
-let routeFor = null;      // which place the route on the map is for
-let routeFrom = null;     // where you were when the route was last drawn
-let following = true;     // does the map move with you?
+let routeFor = null;
+let routeFrom = null;
+let following = true;
 let watchId = null;
 
 let findsMap = null;
 let findsMarkers = null;
-
-
-// ---------- Get the HTML elements ----------
 
 const homeScreen = document.getElementById("home-screen");
 const huntScreen = document.getElementById("hunt-screen");
@@ -78,11 +74,10 @@ const statusText = document.getElementById("status-text");
 const demoButton = document.getElementById("demo-button");
 
 
-// ---------- Small helpers ----------
-
-// Distance between two points in metres (haversine formula)
+// haversine formula - distance between 2 points in metres
+// (earth's round so you can't just do a straight line)
 function getDistance(lat1, lng1, lat2, lng2) {
-  const R = 6371000; // radius of the earth in metres
+  const R = 6371000;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLng = (lng2 - lng1) * Math.PI / 180;
 
@@ -94,7 +89,6 @@ function getDistance(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// 640 -> "640 m", 2130 -> "2.1 km"
 function niceDistance(metres) {
   if (metres < 1000) {
     return Math.round(metres / 10) * 10 + " m";
@@ -102,17 +96,21 @@ function niceDistance(metres) {
   return (metres / 1000).toFixed(1) + " km";
 }
 
-// A date as text like "2026-11-16", so days are easy to compare
 function dayString(date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return date.getFullYear() + "-" + month + "-" + day;
 }
 
-// "2026-11-16" -> "16 Nov 2026"
 function niceDate(dayText) {
   const date = new Date(dayText + "T12:00");
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// \b = whole words only, so "inn" doesn't match "dinner"
+function hasAnyWord(text, words) {
+  text = text.toLowerCase();
+  return words.some(word => new RegExp("\\b" + word + "\\b").test(text));
 }
 
 function showScreen(screen) {
@@ -124,7 +122,6 @@ function showScreen(screen) {
   window.scrollTo(0, 0);
 }
 
-// Shows a message under the main button. Pass "" to clear it.
 function setStatus(message, offerDemo = false) {
   statusText.textContent = message;
   statusBox.hidden = message === "";
@@ -132,16 +129,13 @@ function setStatus(message, offerDemo = false) {
 }
 
 
-// ---------- Your finds (saved on this device) ----------
-
+// finds get saved in localStorage so they stay on the phone
 function getFinds() {
   return JSON.parse(localStorage.getItem("finds")) || [];
 }
 
 function saveFind(place, metres) {
   const finds = getFinds();
-
-  // Don't save the same place twice
   if (finds.some(find => find.wiki === place.wiki)) return;
 
   finds.push({
@@ -156,12 +150,12 @@ function saveFind(place, metres) {
   localStorage.setItem("finds", JSON.stringify(finds));
 }
 
-// How many days in a row you've found something (counting back from today)
+// counts back day by day. if nothing found today yet, start from yesterday
+// so the streak doesn't reset in the morning
 function getStreak(finds) {
   const days = finds.map(find => find.date);
   const day = new Date();
 
-  // If you haven't found anything yet today, the streak can still be alive from yesterday
   if (!days.includes(dayString(day))) {
     day.setDate(day.getDate() - 1);
   }
@@ -174,49 +168,160 @@ function getStreak(finds) {
   return streak;
 }
 
-// The button in the corner of the home screen shows how many you've found
 function showHomeSummary() {
-  const count = getFinds().length;
-  document.getElementById("finds-button").textContent = count + " found";
+  document.getElementById("finds-button").textContent = getFinds().length + " found";
 }
 
 
-// ---------- Picking a place ----------
+// wikidata search (SPARQL) - gets listed buildings + monuments near you
+// P625 = coordinates, P1435 = heritage status
+// returns null if it fails so we know the difference between "nothing found" and "broken"
+async function getHeritagePlaces(centre, radiusMetres) {
+  const query = `
+    SELECT ?itemLabel ?itemDescription ?coord ?heritageLabel ?article WHERE {
+      SERVICE wikibase:around {
+        ?item wdt:P625 ?coord .
+        bd:serviceParam wikibase:center "Point(${centre.lng} ${centre.lat})"^^geo:wktLiteral .
+        bd:serviceParam wikibase:radius "${radiusMetres / 1000}" .
+      }
+      ?item wdt:P1435 ?heritage .
+      ?article schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> .
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "en" . }
+    }
+    LIMIT 300`;
 
-// How far you can go and still get back in the time you picked
+  const url = "https://query.wikidata.org/sparql?format=json&query=" + encodeURIComponent(query);
+
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    const data = await response.json();
+
+    return data.results.bindings.map(row => {
+      // coords come back as text like "Point(-2.27 53.46)" so pull the numbers out
+      const numbers = row.coord.value.replace("Point(", "").replace(")", "").split(" ");
+      const title = decodeURIComponent(row.article.value.split("/wiki/")[1]);
+
+      return {
+        name: row.itemLabel.value,
+        wiki: title,
+        lat: Number(numbers[1]),
+        lng: Number(numbers[0]),
+        description: row.itemDescription ? row.itemDescription.value : "",
+        heritage: row.heritageLabel.value
+      };
+    });
+  } catch (error) {
+    return null;
+  }
+}
+
+// wikipedia only gives back the 50 closest pages, so in the city a long trip
+// still finds stuff on your doorstep. fix = also search 4 spots around you
+function getSearchPoints(centre, maxDistance) {
+  const points = [centre];
+
+  if (maxDistance > 1000) {
+    const step = maxDistance * 0.6;
+    const latStep = step / 111320; // metres in 1 degree of latitude
+    const lngStep = step / (111320 * Math.cos(centre.lat * Math.PI / 180));
+
+    points.push({ lat: centre.lat + latStep, lng: centre.lng });
+    points.push({ lat: centre.lat - latStep, lng: centre.lng });
+    points.push({ lat: centre.lat, lng: centre.lng + lngStep });
+    points.push({ lat: centre.lat, lng: centre.lng - lngStep });
+  }
+
+  return points;
+}
+
+async function getWikipediaPlaces(point, radiusMetres) {
+  const radius = Math.min(Math.round(radiusMetres), 10000); // wikipedia max is 10km
+
+  const url = "https://en.wikipedia.org/w/api.php" +
+    "?action=query&format=json&origin=*" +
+    "&generator=geosearch&ggslimit=50" +
+    "&ggscoord=" + point.lat + "|" + point.lng +
+    "&ggsradius=" + radius +
+    "&prop=coordinates|description&colimit=50";
+
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    const data = await response.json();
+    if (!data.query) return [];
+
+    return Object.values(data.query.pages)
+      .filter(page => page.coordinates && soundsHistoric(page.description))
+      .map(page => {
+        return {
+          name: page.title,
+          wiki: page.title.replaceAll(" ", "_"),
+          lat: page.coordinates[0].lat,
+          lng: page.coordinates[0].lon,
+          description: page.description,
+          heritage: ""
+        };
+      });
+  } catch (error) {
+    return null;
+  }
+}
+
+function soundsHistoric(description) {
+  if (!description) return false;
+  const historic = hasAnyWord(description, historicWords) || hasAnyWord(description, themes.interesting);
+  return historic && !hasAnyWord(description, boringWords);
+}
+
+// fires all the searches at once (Promise.all) so it's quicker, then merges them
+async function findPlaces(centre, maxDistance) {
+  const points = getSearchPoints(centre, maxDistance);
+
+  const searches = [getHeritagePlaces(centre, maxDistance)];
+  for (const point of points) {
+    const radius = points.length === 1 ? maxDistance : maxDistance * 0.5;
+    searches.push(getWikipediaPlaces(point, radius));
+  }
+  const results = await Promise.all(searches);
+
+  const found = [];
+  for (const list of results) {
+    if (list === null) continue;
+    for (const place of list) {
+      if (!found.some(p => p.wiki === place.wiki)) {
+        found.push(place);
+      }
+    }
+  }
+
+  return {
+    places: found,
+    failed: results.every(list => list === null)
+  };
+}
+
+
+// halved cos you've got to get back as well
 function getMaxDistance() {
   return speeds[mode] * minutes / 2;
 }
 
-// Does this place fit the kind of place you asked for?
 function matchesTheme(place) {
   if (theme === "anything") return true;
   return hasAnyWord(place.name + " " + place.description, themes[theme]);
 }
 
-// Picks a place from nearbyPlaces, or returns null and sets pickProblem
 function pickPlace() {
   const maxDistance = getMaxDistance();
   const finds = getFinds();
 
-  // Work out how far away every place is
   const options = nearbyPlaces.map(place => {
-    return {
-      ...place,
-      distance: getDistance(user.lat, user.lng, place.lat, place.lng)
-    };
+    return { ...place, distance: getDistance(user.lat, user.lng, place.lat, place.lng) };
   });
 
-  // Close enough to reach, but not so close you're already standing at it
   const inRange = options.filter(place => place.distance <= maxDistance && place.distance > arriveDistance);
-
-  // The kind of place you asked for
   const rightKind = inRange.filter(matchesTheme);
-
-  // Not found before, and not skipped on this trip
   const fresh = rightKind.filter(place => {
-    const alreadyFound = finds.some(find => find.wiki === place.wiki);
-    return !alreadyFound && !skipped.includes(place.wiki);
+    return !finds.some(find => find.wiki === place.wiki) && !skipped.includes(place.wiki);
   });
 
   if (inRange.length === 0 && searchFailed) {
@@ -236,15 +341,13 @@ function pickPlace() {
     return null;
   }
 
-  // Prefer places that use a good part of your time, so a longer trip really goes further
+  // go for places at least 40% of the way out, so longer trips actually go further
   const further = fresh.filter(place => place.distance >= maxDistance * 0.4);
   const pool = further.length > 0 ? further : fresh;
 
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-
-// ---------- Starting a trip ----------
 
 function findSomewhere() {
   if (!navigator.geolocation) {
@@ -257,15 +360,11 @@ function findSomewhere() {
 
   navigator.geolocation.getCurrentPosition(
     position => {
-      user = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      };
+      user = { lat: position.coords.latitude, lng: position.coords.longitude };
       startTrip();
     },
     error => {
       goButton.disabled = false;
-
       if (error.code === error.PERMISSION_DENIED) {
         setStatus("Location is off. Turn it on in your browser settings.", true);
       } else {
@@ -280,13 +379,12 @@ async function startTrip() {
   goButton.disabled = true;
   setStatus("Searching...");
 
-  // Our hand-picked places + whatever Wikidata and Wikipedia find nearby
   const result = await findPlaces(user, getMaxDistance());
   searchFailed = result.failed;
 
+  // my own places + whatever got found live
   nearbyPlaces = [...places];
   for (const place of result.places) {
-    // Don't add it twice if it's already in our list
     if (!nearbyPlaces.some(p => p.wiki === place.wiki)) {
       nearbyPlaces.push(place);
     }
@@ -297,7 +395,6 @@ async function startTrip() {
   chooseTarget();
 }
 
-// Picks a place and shows the map, or goes home and explains why it couldn't
 function chooseTarget() {
   target = pickPlace();
 
@@ -320,18 +417,13 @@ function skipPlace() {
 }
 
 
-// ---------- On the way (the map screen) ----------
-
 function showHunt() {
   showScreen(huntScreen);
 
-  // Only create the map once
   if (map === null) {
-    // No zoom buttons - you can pinch or scroll to zoom
     map = L.map("map", { zoomControl: false });
     L.tileLayer(tileUrl, { attribution: tileCredit, maxZoom: 19 }).addTo(map);
 
-    // If you move the map yourself, stop following until you tap Re-centre
     map.on("dragstart", () => {
       following = false;
       document.getElementById("recentre-button").hidden = false;
@@ -343,30 +435,27 @@ function showHunt() {
     const mysteryIcon = L.divIcon({ className: "pin-mystery", html: "?", iconSize: [40, 40] });
 
     userMarker = L.marker([user.lat, user.lng], { icon: youIcon, alt: "You" }).addTo(map);
-    targetMarker = L.marker([target.lat, target.lng], { icon: mysteryIcon, alt: "The mystery place" }).addTo(map);
+    targetMarker = L.marker([target.lat, target.lng], { icon: mysteryIcon, alt: "Mystery place" }).addTo(map);
   }
 
-  // The map was hidden, so tell Leaflet to measure it again
+  // leaflet gets the size wrong if the map was hidden, this makes it re-measure
   map.invalidateSize();
 
   userMarker.setLatLng([user.lat, user.lng]);
   targetMarker.setLatLng([target.lat, target.lng]);
   recentre();
-
   drawRoute();
 
-  // There's no free bus and train planner, so public transport opens Google Maps
+  // no free bus/train planner exists so this just opens google maps
   const transitLink = document.getElementById("transit-link");
   transitLink.hidden = mode !== "transit";
   transitLink.href = "https://www.google.com/maps/dir/?api=1&travelmode=transit" +
     "&destination=" + target.lat + "," + target.lng;
 
-  // A clue, if we know the place is officially protected
   const clue = document.getElementById("clue");
   clue.hidden = !target.heritage;
   clue.textContent = target.heritage;
 
-  // Be honest if the live search didn't work
   const note = document.getElementById("hunt-note");
   note.hidden = !searchFailed;
   note.textContent = "No connection. This is a saved place.";
@@ -375,21 +464,19 @@ function showHunt() {
   startTracking();
 }
 
-// Fits you and the mystery place on the map, and follows you again
 function recentre() {
   following = true;
   document.getElementById("recentre-button").hidden = true;
   map.fitBounds([[user.lat, user.lng], [target.lat, target.lng]], { padding: [45, 45], maxZoom: 18 });
 }
 
-// Draws the route from you to the mystery place on the map
+// draws a dashed straight line first, then swaps it for the real route when it comes back.
+// if the route api is down the dashed line just stays
 async function drawRoute() {
   const routeTime = document.getElementById("route-time");
   const placeAtStart = target;
   routeFrom = { lat: user.lat, lng: user.lng };
 
-  // For a new place (or public transport) start with a dashed straight line.
-  // If the route finder doesn't answer, that's what stays.
   if (routeFor !== target || mode === "transit") {
     routeLine.setLatLngs([[user.lat, user.lng], [target.lat, target.lng]]);
     routeLine.setStyle({ dashArray: "2 10" });
@@ -397,11 +484,10 @@ async function drawRoute() {
   }
   routeFor = target;
 
-  // No route for public transport - you'd need bus and train times
   if (mode === "transit") return;
 
   try {
-    // The route finder wants longitude first, then latitude
+    // route api wants lng,lat (backwards to everything else)
     const url = routeServers[mode] +
       user.lng + "," + user.lat + ";" + target.lng + "," + target.lat +
       "?overview=full&geometries=geojson";
@@ -409,21 +495,19 @@ async function drawRoute() {
     const response = await fetch(url);
     const data = await response.json();
 
-    // If you've skipped to another place while this loaded, leave it alone
+    // you skipped while this was loading, so ignore it
     if (target !== placeAtStart) return;
 
     const route = data.routes[0];
 
-    // Swap each point from [lng, lat] to [lat, lng] for Leaflet
+    // flip each point from [lng, lat] to [lat, lng] for leaflet
     const points = route.geometry.coordinates.map(point => [point[1], point[0]]);
     routeLine.setLatLngs(points);
     routeLine.setStyle({ dashArray: null });
 
     const routeMinutes = Math.max(1, Math.round(route.duration / 60));
     routeTime.textContent = routeMinutes + " min " + (mode === "cycling" ? "by bike" : "walk");
-  } catch (error) {
-    // Keep the straight line
-  }
+  } catch (error) {}
 }
 
 function updateDistance() {
@@ -435,7 +519,7 @@ function updateDistance() {
   }
 }
 
-// Keep checking where you are while you travel
+// watchPosition keeps firing every time the phone's GPS moves
 function startTracking() {
   if (!navigator.geolocation) return;
 
@@ -446,23 +530,19 @@ function startTracking() {
       userMarker.setLatLng([user.lat, user.lng]);
       updateDistance();
 
-      // Stop here if that was close enough to arrive
-      if (watchId === null) return;
+      if (watchId === null) return; // already arrived
 
       if (following) {
         recentre();
       }
 
-      // Public transport just has a straight line, so redraw it every time.
-      // Otherwise get a fresh route once you've moved far enough.
+      // only get a new route every 100m so we're not spamming the api
       const moved = getDistance(user.lat, user.lng, routeFrom.lat, routeFrom.lng);
       if (mode === "transit" || moved >= rerouteDistance) {
         drawRoute();
       }
     },
-    () => {
-      // If one check fails we just wait for the next one
-    },
+    () => {},
     { enableHighAccuracy: true }
   );
 }
@@ -475,18 +555,12 @@ function stopTracking() {
 }
 
 
-// ---------- Arriving and the story ----------
-
 function arrive() {
   stopTracking();
   saveFind(target, tripMetres);
-
-  // Show it the way it was saved, so the date is there
-  const find = getFinds().find(f => f.wiki === target.wiki);
-  showStory(find);
+  showStory(getFinds().find(f => f.wiki === target.wiki));
 }
 
-// Shows the story screen for a place
 function showStory(place) {
   showingWiki = place.wiki;
 
@@ -497,19 +571,16 @@ function showStory(place) {
   tag.hidden = !place.heritage;
   tag.textContent = place.heritage;
 
-  // Clear whatever the last story left behind
   document.getElementById("place-story").textContent = "Loading...";
   document.getElementById("place-image").hidden = true;
   document.getElementById("old-view").hidden = true;
   document.getElementById("place-source").href = "https://en.wikipedia.org/wiki/" + encodeURIComponent(place.wiki);
 
   showScreen(storyScreen);
-
   loadStory(place.wiki);
   loadPhotos(place.wiki);
 }
 
-// Gets the story from Wikipedia's summary API (free, no key needed)
 async function loadStory(wikiTitle) {
   const storyText = document.getElementById("place-story");
   const image = document.getElementById("place-image");
@@ -517,15 +588,14 @@ async function loadStory(wikiTitle) {
   try {
     const url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(wikiTitle);
     const response = await fetch(url);
-    if (!response.ok) throw new Error("No story found");
+    if (!response.ok) throw new Error();
     const data = await response.json();
 
-    // If you've moved on to a different story while this loaded, leave it alone
+    // you've opened a different story since, so ignore this one
     if (wikiTitle !== showingWiki) return;
 
     storyText.textContent = data.extract;
 
-    // A small photo for now - loadPhotos swaps in a bigger one if it can
     if (data.thumbnail && image.hidden) {
       image.src = data.thumbnail.source;
       image.hidden = false;
@@ -536,7 +606,7 @@ async function loadStory(wikiTitle) {
   }
 }
 
-// Gets the article's pictures: a bigger main photo, and an older view if there is one
+// gets a bigger photo, plus an old picture if a caption has an old year in it
 async function loadPhotos(wikiTitle) {
   try {
     const url = "https://en.wikipedia.org/api/rest_v1/page/media-list/" + encodeURIComponent(wikiTitle);
@@ -548,7 +618,6 @@ async function loadPhotos(wikiTitle) {
 
     const pictures = data.items.filter(item => item.type === "image" && item.srcset);
 
-    // The main photo at the top of the article
     const main = pictures.find(item => item.leadImage);
     if (main) {
       const image = document.getElementById("place-image");
@@ -556,34 +625,26 @@ async function loadPhotos(wikiTitle) {
       image.hidden = false;
     }
 
-    // An older view: a picture whose caption mentions an old year and how it was made
+    // regex = any year from 1500 to 1959
     const old = pictures.find(item => {
       if (item.leadImage || !item.caption) return false;
       const caption = item.caption.text;
-      const hasOldYear = /\b(1[5-8]\d\d|19[0-5]\d)\b/.test(caption);
-      return hasOldYear && hasAnyWord(caption, oldPictureWords);
+      return /\b(1[5-8]\d\d|19[0-5]\d)\b/.test(caption) && hasAnyWord(caption, oldPictureWords);
     });
 
     if (old) {
-      // Captions can have footnote markers like [14] in them, so take those out
-      const caption = old.caption.text.replace(/\[\d+\]/g, "");
-
       document.getElementById("old-view-image").src = "https:" + old.srcset[0].src;
-      document.getElementById("old-view-caption").textContent = caption;
+      // strips footnote bits like [14] out of the caption
+      document.getElementById("old-view-caption").textContent = old.caption.text.replace(/\[\d+\]/g, "");
       document.getElementById("old-view").hidden = false;
     }
-  } catch (error) {
-    // No extra pictures - the story still works without them
-  }
+  } catch (error) {}
 }
 
-
-// ---------- The finds screen ----------
 
 function showFinds() {
   const finds = getFinds();
   showScreen(findsScreen);
-
   showStats(finds);
   showFindsMap(finds);
   showFindsList(finds);
@@ -608,10 +669,9 @@ function showFindsMap(finds) {
   mapBox.hidden = finds.length === 0;
   if (finds.length === 0) return;
 
-  // Only create the map once
   if (findsMap === null) {
     findsMap = L.map("finds-map", { zoomControl: false });
-    L.tileLayer(tileUrl, { attribution: tileCredit, subdomains: "abcd", maxZoom: 20 }).addTo(findsMap);
+    L.tileLayer(tileUrl, { attribution: tileCredit, maxZoom: 19 }).addTo(findsMap);
     findsMarkers = L.layerGroup().addTo(findsMap);
   }
 
@@ -626,11 +686,9 @@ function showFindsMap(finds) {
     marker.addTo(findsMarkers);
   }
 
-  const corners = finds.map(find => [find.lat, find.lng]);
-  findsMap.fitBounds(corners, { padding: [30, 30], maxZoom: 16 });
+  findsMap.fitBounds(finds.map(find => [find.lat, find.lng]), { padding: [30, 30], maxZoom: 16 });
 }
 
-// One row for each place, newest first. Tap one to read its story again.
 function showFindsList(finds) {
   const list = document.getElementById("finds-list");
   list.innerHTML = "";
@@ -655,22 +713,6 @@ function showFindsList(finds) {
 }
 
 
-// ---------- Buttons ----------
-
-// Makes a group of buttons work like a "pick one" choice
-function setUpChoices(groupId, onPick) {
-  const buttons = document.querySelectorAll("#" + groupId + " button");
-
-  buttons.forEach(button => {
-    button.addEventListener("click", () => {
-      buttons.forEach(b => b.setAttribute("aria-pressed", "false"));
-      button.setAttribute("aria-pressed", "true");
-      onPick(button.dataset.value, button.textContent);
-    });
-  });
-}
-
-// The two dropdowns
 document.getElementById("mode-select").addEventListener("change", event => {
   mode = event.target.value;
 });
@@ -679,10 +721,14 @@ document.getElementById("theme-select").addEventListener("change", event => {
   theme = event.target.value;
 });
 
-setUpChoices("time-choices", value => {
-  minutes = Number(value);
+const timeButtons = document.querySelectorAll("#time-choices button");
+timeButtons.forEach(button => {
+  button.addEventListener("click", () => {
+    timeButtons.forEach(b => b.setAttribute("aria-pressed", "false"));
+    button.setAttribute("aria-pressed", "true");
+    minutes = Number(button.dataset.value);
+  });
 });
-
 
 goButton.addEventListener("click", findSomewhere);
 
@@ -706,7 +752,6 @@ document.getElementById("back-button").addEventListener("click", goHome);
 document.getElementById("story-home-button").addEventListener("click", goHome);
 document.getElementById("finds-back-button").addEventListener("click", goHome);
 
-// "Next place" goes home and starts a new search with the same choices
 document.getElementById("again-button").addEventListener("click", () => {
   goHome();
   findSomewhere();
@@ -715,12 +760,4 @@ document.getElementById("again-button").addEventListener("click", () => {
 document.getElementById("finds-button").addEventListener("click", showFinds);
 document.getElementById("story-finds-button").addEventListener("click", showFinds);
 
-
-// ---------- Start ----------
-
 showHomeSummary();
-
-// The service worker lets the app open even with no signal (see sw.js)
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
-}

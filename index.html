@@ -5,32 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Can't think of a name</title>
 
-  <!-- Lets people add the site to their phone's home screen -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icons/icon-180.png">
-
-  <!-- Leaflet map library (kept in the project so it works without a CDN) -->
-  <link rel="stylesheet" href="lib/leaflet/leaflet.css">
-  <script src="lib/leaflet/leaflet.js" defer></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 
   <link rel="stylesheet" href="style.css">
   <script src="places.js" defer></script>
-  <script src="finder.js" defer></script>
   <script src="script.js" defer></script>
 </head>
 <body>
   <main class="app">
 
-    <!-- Screen 1: home -->
     <section id="home-screen">
       <header class="top">
         <h1>Can't think of a name</h1>
         <button id="finds-button" class="pill-link" type="button"></button>
       </header>
 
-      <!-- Two dropdowns. The labels are hidden on screen but read out by screen readers. -->
       <div class="pickers">
         <label class="picker">
           <span class="hidden-label">How are you getting there?</span>
@@ -64,7 +54,6 @@
 
       <button id="go-button" class="main-button" type="button">Go</button>
 
-      <!-- Messages and problems show up here -->
       <div id="status" class="status" role="status" hidden>
         <p id="status-text"></p>
         <button id="demo-button" class="text-button" type="button" hidden>Use Manchester instead</button>
@@ -72,7 +61,6 @@
     </section>
 
 
-    <!-- Screen 2: on the way -->
     <section id="hunt-screen" hidden>
       <div class="map-wrap">
         <div id="map" class="map"></div>
@@ -101,7 +89,6 @@
     </section>
 
 
-    <!-- Screen 3: the story -->
     <section id="story-screen" hidden>
       <img id="place-image" class="photo" alt="" hidden>
 
@@ -130,7 +117,6 @@
     </section>
 
 
-    <!-- Screen 4: everything you've found -->
     <section id="finds-screen" hidden>
       <header class="top">
         <h2>Finds</h2>
